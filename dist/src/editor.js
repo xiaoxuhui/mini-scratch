@@ -41,7 +41,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
   function buildList(blocks,id='root',branch='children'){
     const list=el('div','block-list');list.dataset.target=id;list.dataset.branch=branch;
     for(const b of blocks){
-      const d=TYPES[b.type],wrapper=el('div',`code-block ${d.category}${d.event?' event-hat':''}${d.definition?' definition-block':''}`);wrapper.dataset.id=b.id;
+      const d=TYPES[b.type],controlFrame=d.category==='control'&&d.container,wrapper=el('div',`code-block ${d.category}${controlFrame?' control-frame':''}${d.event?' event-hat':''}${d.definition?' definition-block':''}`);wrapper.dataset.id=b.id;
       const row=el('div','block-row');row.draggable=!isRunning();row.append(el('span','grip','⠿'),el('span','block-label',d.label));
       for(const [key,spec] of Object.entries(d.fields)){if(Object.keys(d.fields).length>1)row.append(el('span','field-label',spec.label));row.append(fieldControl(b,key,spec));}
       if(d.unit)row.append(document.createTextNode(d.unit));
@@ -52,6 +52,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
         body.append(buildList(b[branchKey],b.id,branchKey));const selected=target.id===b.id&&target.branch===branchKey;
         const addHere=el('button','add-here',selected?'✓ 积木将添加在这里':'＋ 向此处添加积木');addHere.disabled=isRunning();addHere.setAttribute('aria-label',`向${d.label}${branchKey==='otherwise'?'否则':'执行'}分支添加积木`);addHere.addEventListener('click',()=>{target={id:b.id,branch:branchKey};renderScript();notice('现在点击积木盒中的积木，就会加入此分支');});body.append(addHere);wrapper.append(body);
       }
+      if(controlFrame)wrapper.append(el('div','control-end'));
       list.append(wrapper);
     }
     if(!blocks.length&&id!=='root')list.append(el('div','empty-drop','拖入积木，或点下方添加'));
@@ -75,8 +76,9 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
   function renderPalette(){
     $('palette').replaceChildren();$('categoryName').textContent=CATEGORIES[category]+'积木';document.querySelectorAll('[data-category]').forEach(btn=>btn.classList.toggle('active',btn.dataset.category===category));renderTools();
     for(const [type,d] of Object.entries(TYPES)){
-      if(d.category!==category)continue;const btn=el('button',`palette-block ${category}${d.reporter?' reporter':''}`);btn.draggable=!isRunning();btn.disabled=isRunning();btn.dataset.type=type;btn.setAttribute('aria-label',`添加${d.label}${d.reporter?'返回值':'积木'}`);btn.append(document.createTextNode(d.label+' '));
-      for(const spec of Object.values(d.fields)){const sample=isExpression(spec.default)?TYPES[spec.default.type].label:labelOption(spec.default,spec);btn.append(el('span','sample-value',String(sample)));}
+      if(d.category!==category)continue;const controlFrame=category==='control'&&d.container,btn=el('button',`palette-block ${category}${controlFrame?' control-frame':''}${d.reporter?' reporter':''}`);btn.draggable=!isRunning();btn.disabled=isRunning();btn.dataset.type=type;btn.setAttribute('aria-label',`添加${d.label}${d.reporter?'返回值':'积木'}`);const head=controlFrame?el('span','palette-head'):btn;head.append(document.createTextNode(d.label+' '));
+      for(const spec of Object.values(d.fields)){const sample=isExpression(spec.default)?TYPES[spec.default.type].label:labelOption(spec.default,spec);head.append(el('span','sample-value',String(sample)));}
+      if(controlFrame){btn.append(head,el('span','palette-cavity'));if(d.otherwise)btn.append(el('span','palette-else','否则'),el('span','palette-cavity'));btn.append(el('span','control-end'));}
       btn.addEventListener('click',()=>add(type));btn.addEventListener('dragstart',e=>{e.dataTransfer.setData('application/x-block',JSON.stringify({type}));e.dataTransfer.effectAllowed='copy';});$('palette').append(btn);
     }
   }
