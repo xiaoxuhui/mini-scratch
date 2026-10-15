@@ -1,0 +1,126 @@
+import {TYPES,CATEGORIES,block,expression,isExpression,findBlock,editTree,moveInTree,countBlocks,evaluate} from './core.js';
+const $=id=>document.getElementById(id);
+function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
+const option=(value,label)=>{const node=el('option','',label);node.value=value;return node;};
+const keyNames={space:'空格',ArrowLeft:'← 左',ArrowRight:'右 →',ArrowUp:'↑ 上',ArrowDown:'↓ 下',meadow:'青草地',spaceBackdrop:'星空',paper:'方格纸'};
+function labelOption(value,field){return field.label==='背景'&&value==='space'?'星空':keyNames[value]||value;}
+export function createEditor({getProject,isRunning,onChange,notice,getState,getSensing}){
+  let category='motion',target={id:'root',branch:'children'},activeSlot=null;
+  const fieldLabel=(type,key)=>`${TYPES[type].label} · ${TYPES[type].fields[key].label}`;
+  const defaults=type=>{const b=block(type),project=getProject();for(const [key,f] of Object.entries(TYPES[type].fields)){if(f.kind==='variable')b[key]=project.variables?.[0]?.name||'分数';if(f.kind==='procedure')b[key]=project.blocks.find(x=>x.type==='define')?.name||'小舞步';}return b;};
+  function changedField(id,key,value,options={}){return onChange({...getProject(),blocks:editTree(getProject().blocks,id,b=>({...b,[key]:value}))},options);}
+  function add(type){
+    if(isRunning())return;
+    const d=TYPES[type];if(d.reporter){openExpression(null,null,expression(type,{...(type==='variable'?{name:getProject().variables?.[0]?.name||'分数'}:{})}));return;}
+    let p=getProject();const added=defaults(type);
+    if(type==='define'){const used=new Set(p.blocks.filter(b=>b.type==='define').map(b=>b.name));let i=2;while(used.has(added.name))added.name='小舞步'+i++;}
+    if((type==='setVar'||type==='changeVar')&&!p.variables?.length)p={...p,variables:[{name:'分数',value:0}]};
+    const dest=d.event||d.definition?{id:'root',branch:'children'}:target;
+    const blocks=dest.id==='root'?[...p.blocks,added]:editTree(p.blocks,dest.id,b=>({...b,[dest.branch]:[...b[dest.branch],added]}));
+    if(onChange({...p,blocks}))notice('已添加'+d.label+'积木');
+  }
+  function choices(field,value){const p=getProject();let entries=field.options||[];if(field.kind==='variable')entries=(p.variables||[]).map(v=>v.name);if(field.kind==='procedure')entries=p.blocks.filter(b=>b.type==='define').map(b=>b.name);if(!entries.includes(value))entries=[value,...entries];return entries;}
+  function fieldControl(b,key,spec){
+    const value=b[key],slot=el('span','parameter-slot');slot.dataset.id=b.id;slot.dataset.field=key;
+    let input;
+    if(isExpression(value)){
+      input=el('button',`expression-chip ${TYPES[value.type].category}`,TYPES[value.type].label);input.type='button';input.setAttribute('aria-label','编辑'+fieldLabel(b.type,key)+'返回值');input.addEventListener('click',()=>openExpression(b.id,key));
+    }else if(['choice','variable','procedure'].includes(spec.kind)){
+      input=el('select');for(const item of choices(spec,value))input.append(option(item,labelOption(item,spec)));input.value=value;input.addEventListener('change',()=>changedField(b.id,key,input.value));
+    }else{
+      input=el('input');input.type=spec.kind==='number'?'number':'text';input.value=value;input.maxLength=spec.kind==='name'?20:80;
+      if(input.type==='number'){input.min=spec.min;input.max=spec.max;input.step=b.type==='repeat'?'1':'any';}
+      let recorded=false;
+      const commit=()=>{if(input.value===''&&input.type==='number')return false;const next=input.type==='number'?Number(input.value):input.value;const same=JSON.stringify(findBlock(getProject().blocks,b.id)?.[key])===JSON.stringify(next);if(same)return true;const ok=changedField(b.id,key,next,{render:false,record:!recorded,quiet:true});if(ok)recorded=true;return ok;};
+      input.addEventListener('input',commit);input.addEventListener('blur',()=>{if(!commit())notice('请输入有效参数');input.value=findBlock(getProject().blocks,b.id)?.[key]??value;recorded=false;});
+    }
+    input.disabled=isRunning();input.setAttribute('aria-label',isExpression(value)?'编辑'+fieldLabel(b.type,key)+'返回值':fieldLabel(b.type,key));input.addEventListener('dragstart',e=>e.preventDefault());slot.append(input);
+    if(spec.expression){const edit=el('button','value-button','◇');edit.type='button';edit.disabled=isRunning();edit.title='插入或编辑返回值';edit.setAttribute('aria-label','设置'+fieldLabel(b.type,key)+'返回值');edit.addEventListener('click',()=>openExpression(b.id,key));slot.append(edit);slot.classList.add('accepts-expression');}
+    return slot;
+  }
+  function buildList(blocks,id='root',branch='children'){
+    const list=el('div','block-list');list.dataset.target=id;list.dataset.branch=branch;
+    for(const b of blocks){
+      const d=TYPES[b.type],wrapper=el('div',`code-block ${d.category}${d.event?' event-hat':''}${d.definition?' definition-block':''}`);wrapper.dataset.id=b.id;
+      const row=el('div','block-row');row.draggable=!isRunning();row.append(el('span','grip','⠿'),el('span','block-label',d.label));
+      for(const [key,spec] of Object.entries(d.fields)){if(Object.keys(d.fields).length>1)row.append(el('span','field-label',spec.label));row.append(fieldControl(b,key,spec));}
+      if(d.unit)row.append(document.createTextNode(d.unit));
+      const actions=el('span','block-actions');for(const [text,label,dir] of [['↑','上移',-1],['↓','下移',1],['×','删除',0]]){const btn=el('button','',text);btn.disabled=isRunning();btn.setAttribute('aria-label',label+d.label+'积木');btn.addEventListener('click',()=>onChange({...getProject(),blocks:dir?moveInTree(getProject().blocks,b.id,dir):editTree(getProject().blocks,b.id,()=>[])}));actions.append(btn);}row.append(actions);wrapper.append(row);
+      row.addEventListener('dragstart',e=>{if(isRunning()){e.preventDefault();return;}e.stopPropagation();e.dataTransfer.setData('application/x-block',JSON.stringify({id:b.id}));e.dataTransfer.effectAllowed='move';});
+      for(const branchKey of ['children','otherwise'])if(b[branchKey]){
+        const body=el('div','repeat-body');if(branchKey==='otherwise')body.append(el('div','branch-title','否则'));
+        body.append(buildList(b[branchKey],b.id,branchKey));const selected=target.id===b.id&&target.branch===branchKey;
+        const addHere=el('button','add-here',selected?'✓ 积木将添加在这里':'＋ 向此处添加积木');addHere.disabled=isRunning();addHere.setAttribute('aria-label',`向${d.label}${branchKey==='otherwise'?'否则':'执行'}分支添加积木`);addHere.addEventListener('click',()=>{target={id:b.id,branch:branchKey};renderScript();notice('现在点击积木盒中的积木，就会加入此分支');});body.append(addHere);wrapper.append(body);
+      }
+      list.append(wrapper);
+    }
+    if(!blocks.length&&id!=='root')list.append(el('div','empty-drop','拖入积木，或点下方添加'));
+    return list;
+  }
+  function renderScript(){
+    const p=getProject();if(target.id!=='root'&&!findBlock(p.blocks,target.id))target={id:'root',branch:'children'};
+    const next=buildList(p.blocks);next.id='script';next.classList.add('root-list');
+    const addRoot=el('button','add-root',target.id==='root'?'＋ 拖入积木，或点击积木盒添加':'＋ 改为向程序末尾添加');addRoot.disabled=isRunning();addRoot.addEventListener('click',()=>{target={id:'root',branch:'children'};renderScript();notice('接下来将添加到主程序末尾');});next.append(addRoot);$('script').replaceWith(next);$('blockCount').textContent=`${countBlocks(p.blocks)} 块积木`;
+  }
+  function renderTools(){
+    const tools=$('categoryTools');tools.replaceChildren();const p=getProject();
+    if(category==='variables'){
+      const name=el('input');name.placeholder='变量名';name.maxLength=20;name.setAttribute('aria-label','新变量名称');
+      const addVar=el('button','button primary','＋ 新建变量');addVar.disabled=isRunning();addVar.addEventListener('click',()=>onChange({...getProject(),variables:[...(getProject().variables||[]),{name:name.value.trim()||'分数',value:0}]}));tools.append(name,addVar);
+      for(const variable of p.variables||[]){const row=el('div','variable-declaration');row.append(el('span','',variable.name));const value=el('input');value.value=variable.value;value.setAttribute('aria-label',variable.name+'初始值');value.disabled=isRunning();value.addEventListener('change',()=>{const n=Number(value.value),initial=value.value.trim()!==''&&Number.isFinite(n)?n:value.value;onChange({...getProject(),variables:getProject().variables.map(v=>v.name===variable.name?{...v,value:initial}:v)});});const remove=el('button','text-button','×');remove.disabled=isRunning();remove.setAttribute('aria-label','删除变量'+variable.name);remove.addEventListener('click',()=>onChange({...getProject(),variables:getProject().variables.filter(v=>v.name!==variable.name)}));row.append(value,remove);tools.append(row);}
+    }
+    if(category==='custom'){tools.append(el('p','tool-note','先定义，再在程序里调用。参数只属于本次调用。'));}
+    if(category==='sensing'||category==='operators')tools.append(el('p','tool-note','圆形积木返回一个值。拖进白色参数，或点击选择放入位置。'));
+  }
+  function renderPalette(){
+    $('palette').replaceChildren();$('categoryName').textContent=CATEGORIES[category]+'积木';document.querySelectorAll('[data-category]').forEach(btn=>btn.classList.toggle('active',btn.dataset.category===category));renderTools();
+    for(const [type,d] of Object.entries(TYPES)){
+      if(d.category!==category)continue;const btn=el('button',`palette-block ${category}${d.reporter?' reporter':''}`);btn.draggable=!isRunning();btn.disabled=isRunning();btn.dataset.type=type;btn.setAttribute('aria-label',`添加${d.label}${d.reporter?'返回值':'积木'}`);btn.append(document.createTextNode(d.label+' '));
+      for(const spec of Object.values(d.fields)){const sample=isExpression(spec.default)?TYPES[spec.default.type].label:labelOption(spec.default,spec);btn.append(el('span','sample-value',String(sample)));}
+      btn.addEventListener('click',()=>add(type));btn.addEventListener('dragstart',e=>{e.dataTransfer.setData('application/x-block',JSON.stringify({type}));e.dataTransfer.effectAllowed='copy';});$('palette').append(btn);
+    }
+  }
+  function listSlots(){const out=[];const walk=items=>{for(const b of items){for(const [field,spec] of Object.entries(TYPES[b.type].fields))if(spec.expression)out.push({id:b.id,field,label:fieldLabel(b.type,field)+` (${out.length+1})`});walk(b.children||[]);walk(b.otherwise||[]);}};walk(getProject().blocks);return out;}
+  function openExpression(id,field,replacement){
+    if(isRunning())return;const slots=listSlots();if(!slots.length){notice('先添加一块带参数的积木，再把返回值放入参数');return;}
+    const dialog=$('expressionDialog'),targetSelect=$('expressionTarget');targetSelect.replaceChildren(...slots.map((s,i)=>option(String(i),s.label)));
+    let chosen=slots.findIndex(s=>s.id===(id||activeSlot?.id)&&s.field===(field||activeSlot?.field));if(chosen<0)chosen=0;targetSelect.value=String(chosen);
+    let draft=structuredClone(replacement??findBlock(getProject().blocks,slots[chosen].id)[slots[chosen].field]);
+    function choose(){const index=Number(targetSelect.value);return slots[index];}
+    function preview(){try{$('expressionPreview').textContent='当前预览：'+String(evaluate(draft,{state:getState(),sensing:getSensing,clock:()=>performance.now()/1000}));}catch(error){$('expressionPreview').textContent='运行时取值 · '+error.message;}}
+    function node(value,setValue,depth=0){
+      const wrapper=el('div','expression-node'),type=el('select');type.setAttribute('aria-label',depth===0?'返回值类型':`第${depth}层返回值类型`);type.append(option('literal','直接输入值'));
+      if(depth<8)for(const [categoryId,name] of Object.entries(CATEGORIES)){const group=el('optgroup');group.label=name;for(const [key,d] of Object.entries(TYPES))if(d.category===categoryId&&d.reporter)group.append(option(key,d.label));if(group.children.length)type.append(group);}
+      type.value=isExpression(value)?value.type:'literal';type.addEventListener('change',()=>{setValue(type.value==='literal'?0:expression(type.value,type.value==='variable'?{name:getProject().variables?.[0]?.name||'分数'}:{}));draw();});wrapper.append(type);
+      if(!isExpression(value)){
+        const kind=el('select');kind.setAttribute('aria-label','输入值类型');kind.append(option('number','数值'),option('string','文字'),option('boolean','布尔'));kind.value=typeof value;
+        const input=el('input');input.setAttribute('aria-label','直接输入值');input.value=String(value);input.maxLength=80;const update=()=>{setValue(kind.value==='number'?Number(input.value):kind.value==='boolean'?input.value==='true':input.value);preview();};input.addEventListener('input',update);kind.addEventListener('change',update);wrapper.append(kind,input);
+      }else{
+        wrapper.classList.add(TYPES[value.type].category+'-value');for(const [key,spec] of Object.entries(TYPES[value.type].fields)){const group=el('div','expression-field');group.append(el('label','',spec.label));if(spec.expression)group.append(node(value[key],next=>{value[key]=next;},depth+1));else{const input=el('select');input.setAttribute('aria-label','返回值'+spec.label);for(const item of choices(spec,value[key]))input.append(option(item,labelOption(item,spec)));input.value=value[key];input.addEventListener('change',()=>{value[key]=input.value;preview();});group.append(input);}wrapper.append(group);}
+      }
+      return wrapper;
+    }
+    function draw(){$('expressionTree').replaceChildren(node(draft,value=>{draft=value;}));preview();}
+    targetSelect.onchange=()=>{const s=choose();draft=structuredClone(replacement??findBlock(getProject().blocks,s.id)[s.field]);draw();};
+    $('applyExpression').onclick=()=>{const s=choose();if(changedField(s.id,s.field,draft)){activeSlot=s;dialog.close();}};
+    $('clearExpression').onclick=()=>{const s=choose(),b=findBlock(getProject().blocks,s.id);draft=structuredClone(TYPES[b.type].fields[s.field].default);if(isExpression(draft))draft=true;draw();};
+    draw();dialog.showModal();
+  }
+  document.querySelectorAll('[data-category]').forEach(btn=>btn.addEventListener('click',()=>{category=btn.dataset.category;renderPalette();}));
+  $('closeExpression').addEventListener('click',()=>$('expressionDialog').close());
+  document.addEventListener('dragover',e=>{if(isRunning()||!Array.from(e.dataTransfer.types).includes('application/x-block'))return;const dest=e.target.closest('.accepts-expression')||e.target.closest('.block-list');if(!dest)return;e.preventDefault();document.querySelectorAll('.drag-over').forEach(n=>n.classList.remove('drag-over'));dest.classList.add('drag-over');});
+  document.addEventListener('dragend',()=>document.querySelectorAll('.drag-over').forEach(n=>n.classList.remove('drag-over')));
+  document.addEventListener('drop',e=>{
+    document.querySelectorAll('.drag-over').forEach(n=>n.classList.remove('drag-over'));if(isRunning())return;
+    try{const raw=e.dataTransfer.getData('application/x-block');if(!raw)return;const data=JSON.parse(raw),d=data.type&&TYPES[data.type],slot=e.target.closest('.accepts-expression');
+      if(d?.reporter){e.preventDefault();if(!slot){notice('返回值积木要放进白色参数中');return;}changedField(slot.dataset.id,slot.dataset.field,expression(data.type,data.type==='variable'?{name:getProject().variables?.[0]?.name||'分数'}:{}));return;}
+      const list=e.target.closest('.block-list');if(!list)return;e.preventDefault();const p=getProject(),moving=data.id?findBlock(p.blocks,data.id):defaults(data.type);if(!moving)return;
+      const parent=list.dataset.target,branch=list.dataset.branch;if(parent===moving.id||findBlock(moving.children||[],parent)||findBlock(moving.otherwise||[],parent)){notice('不能放进自己的分支');return;}
+      const row=e.target.closest('.block-row'),before=row?.parentElement.parentElement===list?row.parentElement.dataset.id:null;if(before===moving.id)return;
+      let blocks=data.id?editTree(p.blocks,data.id,()=>[]):p.blocks;
+      const insert=items=>{const copy=[...items],i=copy.findIndex(b=>b.id===before);copy.splice(i<0?copy.length:i,0,moving);return copy;};blocks=parent==='root'?insert(blocks):editTree(blocks,parent,b=>({...b,[branch]:insert(b[branch])}));
+      onChange({...p,blocks,...((moving.type==='setVar'||moving.type==='changeVar')&&!p.variables?.length?{variables:[{name:'分数',value:0}]}:{})});
+    }catch(error){notice(error.message);}
+  });
+  return {render(){renderPalette();renderScript();},renderScript,resetTarget(){target={id:'root',branch:'children'};activeSlot=null;},add};
+}

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync,readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 const root=new URL('../',import.meta.url);
@@ -8,5 +8,7 @@ assert.ok(script,'Standalone has an inline module');
 assert.ok(!/<script[^>]+src=|<link[^>]+rel="stylesheet"/.test(html),'No external scripts or styles');
 const syntax=spawnSync(process.execPath,['--check','--input-type=module'],{input:script[1],encoding:'utf8'});
 assert.equal(syntax.status,0,syntax.stderr);
-for(const file of ['core.js','app.js','style.css'])assert.equal(readFileSync(new URL('dist/src/'+file,root),'utf8'),readFileSync(new URL('src/'+file,root),'utf8'));
+const sourceFiles=readdirSync(new URL('src/',root)).sort();
+assert.deepEqual(readdirSync(new URL('dist/src/',root)).sort(),sourceFiles);
+for(const file of sourceFiles)assert.equal(readFileSync(new URL('dist/src/'+file,root),'utf8'),readFileSync(new URL('src/'+file,root),'utf8'));
 console.log('Standalone syntax, offline assets and source parity: PASS');
