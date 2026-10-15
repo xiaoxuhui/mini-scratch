@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url);
 await mkdir(new URL('dist/src/', root), { recursive:true });
 await copyFile(new URL('index.html',root),new URL('dist/index.html',root));
+await copyFile(new URL('LICENSE',root),new URL('dist/LICENSE',root));
 for(const file of await readdir(new URL('src/',root))) await copyFile(new URL('src/'+file,root),new URL('dist/src/'+file,root));
 const html=await readFile(new URL('index.html',root),'utf8');
 const css=await readFile(new URL('src/style.css',root),'utf8');
