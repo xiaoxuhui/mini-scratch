@@ -1,8 +1,11 @@
 import {TYPES,block,uid,isExpression,expression} from './blocks.js';
+import {validateAssets,PROJECT_BUDGET} from './assets.js';
 const named=value=>{if(typeof value!=='string'||!value.trim()||value.trim().length>20||/[\u0000-\u001f]/.test(value))throw new Error('名称需要 1–20 个字符');return value.trim();};
 export function primitive(value){if(typeof value==='string')return value.slice(0,80);if(typeof value==='boolean')return value;if(typeof value==='number'&&Number.isFinite(value))return value;throw new Error('参数必须是文字、有限数值或返回值积木');}
 export function validateProject(raw){
   if(!raw||raw.version!==1||!Array.isArray(raw.blocks))throw new Error('项目格式不正确，请选择灵感积木 JSON 文件');
+  if(JSON.stringify(raw).length>PROJECT_BUDGET)throw new Error('作品不能超过 4 MB');
+  const assets=raw.assets===undefined?undefined:validateAssets(raw.assets);
   const ids=new Set();let total=0,values=0;
   const field=(value,spec,depth=0)=>{
     if(++values>2000)throw new Error('参数节点过多');
@@ -15,7 +18,9 @@ export function validateProject(raw){
       return Math.max(spec.min,Math.min(spec.max,Number(value)));
     }
     if(spec.kind==='value')return primitive(value);
-    if(spec.kind==='choice'){if(!spec.options.includes(value))throw new Error('积木选项无效');return value;}
+    if(spec.kind==='sound'){if(value!==''&&!assets?.sounds.some(x=>x.id===value))throw new Error('声音素材不存在');return value;}
+    if(spec.kind==='reference'){if(typeof value!=='string'||!value||value.length>100)throw new Error('参数引用无效');return value;}
+    if(spec.kind==='choice'){if(!spec.options.includes(value)&&!(spec.label==='背景'&&assets?.backdrops.some(x=>x.id===value)))throw new Error('积木选项无效');return value;}
     return named(value);
   };
   const parse=(items,depth)=>{
@@ -25,14 +30,20 @@ export function validateProject(raw){
       if(!item||!Object.hasOwn(TYPES,item.type)||TYPES[item.type].reporter)throw new Error('包含未知积木或返回值放在了程序区');
       const d=TYPES[item.type];if((d.event||d.definition)&&depth!==0)throw new Error('事件与定义积木必须放在程序最外层');
       const id=typeof item.id==='string'&&item.id.length<100&&!ids.has(item.id)?item.id:uid();ids.add(id);
-      const b={id,type:item.type,...Object.fromEntries(Object.entries(d.fields).map(([key,s])=>[key,field(item[key],s)]))};
+      const specs={...d.fields};if(item.type==='define'&&item.parameters!==undefined)delete specs.parameter;if(item.type==='call'&&item.arguments!==undefined)delete specs.value;
+      const b={id,type:item.type,...Object.fromEntries(Object.entries(specs).map(([key,s])=>[key,field(item[key],s)]))};
+      if(item.type==='define'&&item.parameters!==undefined){
+        if(!Array.isArray(item.parameters)||item.parameters.length>2000)throw new Error('参数列表过长');
+        const used=new Set(),names=new Set();b.parameters=item.parameters.map(p=>{if(++values>2000)throw new Error('参数节点过多');const pid=field(p?.id,{kind:'reference'}),name=named(p?.name);if(used.has(pid)||names.has(name)||!['number','string','boolean'].includes(p?.type))throw new Error('参数名称、ID 不能重复，类型必须有效');used.add(pid);names.add(name);return {id:pid,name,type:p.type};});
+      }
+      if(item.type==='call'&&item.arguments!==undefined){if(!Array.isArray(item.arguments)||item.arguments.length>2000)throw new Error('调用参数过多');const used=new Set();b.arguments=item.arguments.map(a=>{const parameterId=field(a?.parameterId,{kind:'reference'});if(used.has(parameterId))throw new Error('调用参数不能重复');used.add(parameterId);return {parameterId,value:field(a.value,{kind:'value',expression:true})};});}
       if(b.type==='repeat'&&!isExpression(b.value))b.value=Math.floor(b.value);
       if(d.container)b.children=parse(item.children,depth+1);
       if(d.otherwise)b.otherwise=parse(item.otherwise,depth+1);
       return b;
     });
   };
-  const result={version:1,name:String(raw.name||'我的新作品').slice(0,40),sprite:['fox','rabbit','robot'].includes(raw.sprite)?raw.sprite:'fox',backdrop:['meadow','space','paper'].includes(raw.backdrop)?raw.backdrop:'meadow',blocks:parse(raw.blocks,0)};
+  const result={version:1,name:String(raw.name||'我的新作品').slice(0,40),sprite:['fox','rabbit','robot'].includes(raw.sprite)||assets?.sprites.some(x=>x.id===raw.sprite)?raw.sprite:'fox',backdrop:['meadow','space','paper'].includes(raw.backdrop)||assets?.backdrops.some(x=>x.id===raw.backdrop)?raw.backdrop:'meadow',blocks:parse(raw.blocks,0),...(assets?{assets}:{})};
   const definitions=result.blocks.filter(b=>b.type==='define').map(b=>b.name);
   if(new Set(definitions).size!==definitions.length)throw new Error('自制积木名称不能重复');
   if(raw.variables!==undefined){

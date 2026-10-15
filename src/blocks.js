@@ -27,6 +27,7 @@ define('note','sound','播放音符',{value:n('音符 MIDI',60,24,96),seconds:n(
 define('setVolume','sound','音量设为',{value:n('百分比',80,0,100)});
 define('changeVolume','sound','音量增加',{value:n('增加量',-10,-100,100)});
 define('stopSound','sound','停止所有声音');
+define('playSound','sound','播放声音',{sound:{kind:'sound',label:'声音',default:''}});
 define('whenFlag','events','当绿旗被点击',{}, {container:true,event:true});
 define('whenKey','events','当按下键',{key:choice('按键','space',['space','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','d','w','s'])},{container:true,event:true});
 define('whenClick','events','当角色被点击',{}, {container:true,event:true});
@@ -50,6 +51,16 @@ define('variable','variables','变量的值',{name:nameField('变量','分数','
 define('define','custom','定义积木',{name:nameField('名称','小舞步'),parameter:nameField('参数名','步数')},{container:true,definition:true});
 define('call','custom','调用积木',{name:nameField('名称','小舞步','procedure'),value:v('参数',60)});
 define('argument','custom','本次调用的参数',{}, {reporter:true});
+define('parameter','custom','参数',{definitionId:{kind:'reference',label:'定义',default:''},parameterId:{kind:'reference',label:'参数',default:''}},{reporter:true,hidden:true});
+for(const type of ['mouseDown','touchingEdge','keyPressed','greater','less','equals','and','or','not'])TYPES[type].valueType='boolean';
+for(const type of ['if','until'])TYPES[type].fields.condition.valueType='boolean';
+for(const type of ['and','or'])for(const spec of Object.values(TYPES[type].fields))spec.valueType='boolean';
+TYPES.not.fields.value.valueType='boolean';
+for(const type of ['xPosition','yPosition','direction'])TYPES[type].category='motion';
+TYPES.spriteSize.category='looks';TYPES.spriteSize.label='当前大小';
+define('volume','sound','当前音量',{}, {reporter:true});
+define('costumeNumber','looks','当前造型编号',{}, {reporter:true});
+define('backdropNumber','looks','当前背景编号',{}, {reporter:true});
 define('penDown','pen','落笔');define('penUp','pen','抬笔');define('clear','pen','清除画迹');
 let sequence=0;
 export const uid=()=>`b${Date.now().toString(36)}-${++sequence}`;
