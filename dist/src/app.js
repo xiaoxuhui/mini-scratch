@@ -6,7 +6,7 @@ const categories = { motion:'运动', looks:'外观', control:'控制', pen:'画
 const names = { fox:'小狐狸',rabbit:'小兔子',robot:'小机器人' };
 const backdrops = { meadow:'青草地',space:'星空',paper:'方格纸' };
 const history = [];
-let project = example(), state = initialState(), category = 'motion', controller = null, toastTimer, bootMessage = '';
+let project = example(), state = initialState(), category = 'motion', controller = null, toastTimer, bootMessage = '', insertionTarget = 'root';
 try { const saved = localStorage.getItem(STORAGE); if (saved) project = validateProject(JSON.parse(saved)); }
 catch { bootMessage = '本机存档无法读取，已载入示例。可导入备份作品。'; }
 const spriteArt = {
@@ -21,11 +21,11 @@ function save() {
   catch { $('saveStatus').textContent='保存不可用，请导出备份'; }
 }
 function change(next) {
-  try { const valid=validateProject(next); history.push(JSON.stringify(project));if(history.length>30)history.shift();project=valid;save();render();return true; }
+  try { const valid=validateProject(next); history.push(JSON.stringify(project));if(history.length>30)history.shift();project=valid;if(insertionTarget!=='root' && !findBlock(project.blocks,insertionTarget))insertionTarget='root';save();render();return true; }
   catch(error){toast(error.message);return false;}
 }
 function findBlock(blocks,id) { for(const b of blocks){if(b.id===id)return b;const found=b.children && findBlock(b.children,id);if(found)return found;} }
-function addBlock(type,parent='root') {
+function addBlock(type,parent=insertionTarget) {
   if(controller)return;
   const added=block(type);
   const blocks=parent==='root'?[...project.blocks,added]:editTree(project.blocks,parent,b=>({...b,children:[...b.children,added]}));
@@ -50,7 +50,19 @@ function parameter(b,field,label) {
   const d=TYPES[b.type];
   const input=element('input');input.type=b.type==='say'?'text':'number';input.value=b[field];input.disabled=!!controller;input.setAttribute('aria-label',label);
   if(input.type==='text')input.maxLength=80;else {input.min=field==='x'?-240:field==='y'?-180:d.min;input.max=field==='x'?240:field==='y'?180:d.max;input.step=b.type==='repeat'?'1':'any';}
-  input.addEventListener('change',()=>{const value=input.type==='number'?input.value:input.value;if(!change({...project,blocks:editTree(project.blocks,b.id,item=>({...item,[field]:value}))}))input.value=b[field];});
+  let recorded=false;
+  const commit=()=>{
+    try {
+      const valid=validateProject({...project,blocks:editTree(project.blocks,b.id,item=>({...item,[field]:input.value}))});
+      if(JSON.stringify(valid)!==JSON.stringify(project)) {
+        if(!recorded){history.push(JSON.stringify(project));if(history.length>30)history.shift();recorded=true;}
+        project=valid;save();$('undoButton').disabled=false;
+      }
+      return true;
+    }catch{return false;}
+  };
+  input.addEventListener('input',()=>{if(input.value!=='' || input.type==='text')commit();});
+  input.addEventListener('blur',()=>{if(!commit())toast('请输入有效参数');input.value=findBlock(project.blocks,b.id)?.[field] ?? b[field];recorded=false;});
   input.addEventListener('dragstart',e=>e.preventDefault());
   return input;
 }
@@ -69,13 +81,13 @@ function buildList(blocks,target) {
     });
     row.append(actions);wrapper.append(row);
     row.addEventListener('dragstart',e=>{if(controller){e.preventDefault();return;}e.stopPropagation();e.dataTransfer.setData('application/x-block',JSON.stringify({id:b.id}));e.dataTransfer.effectAllowed='move';});
-    if(b.children) {const body=element('div','repeat-body');body.append(buildList(b.children,b.id));wrapper.append(body,element('div','repeat-end'));}
+    if(b.children) {const body=element('div','repeat-body');body.append(buildList(b.children,b.id));const add=element('button','add-here',insertionTarget===b.id?'✓ 积木将添加在这里':'＋ 向此循环添加积木');add.disabled=!!controller;add.addEventListener('click',()=>{insertionTarget=b.id;renderScript();toast('现在点击积木盒中的积木，就会加入此循环');});body.append(add);wrapper.append(body,element('div','repeat-end'));}
     list.append(wrapper);
   });
   return list;
 }
 function renderScript() {
-  const next=buildList(project.blocks,'root');next.id='script';next.classList.add('root-list');$('script').replaceWith(next);$('blockCount').textContent=`${countBlocks(project.blocks)} 块积木`;
+  const next=buildList(project.blocks,'root');next.id='script';next.classList.add('root-list');const add=element('button','add-root',insertionTarget==='root'?'＋ 拖入积木，或点击积木盒添加':'＋ 改为向程序末尾添加');add.disabled=!!controller;add.addEventListener('click',()=>{insertionTarget='root';renderScript();toast('现在点击积木盒中的积木，将添加到程序末尾');});next.append(add);$('script').replaceWith(next);$('blockCount').textContent=`${countBlocks(project.blocks)} 块积木`;
 }
 function renderStage() {
   $('stage').className='stage '+project.backdrop;$('stageBadge').textContent=backdrops[project.backdrop];
@@ -90,6 +102,7 @@ function renderStage() {
   $('xValue').textContent=Math.round(state.x);$('yValue').textContent=Math.round(state.y);$('angleValue').textContent=Math.round(state.angle)+'°';$('spriteName').textContent=names[project.sprite];
 }
 function render() {
+  if(insertionTarget!=='root' && !findBlock(project.blocks,insertionTarget))insertionTarget='root';
   $('projectName').value=project.name;$('spriteSelect').value=project.sprite;$('backdropSelect').value=project.backdrop;
   document.body.classList.toggle('running',!!controller);
   for(const id of ['runButton','newButton','clearButton','importButton','spriteSelect','backdropSelect','projectName'])$(id).disabled=!!controller;
@@ -116,7 +129,7 @@ document.querySelectorAll('[data-category]').forEach(btn=>btn.addEventListener('
 $('runButton').addEventListener('click',run);$('stopButton').addEventListener('click',cancel);
 $('resetButton').addEventListener('click',async()=>{cancel();state=initialState();renderStage();$('stageMessage').textContent='舞台已复位，开始新的尝试';});
 $('clearButton').addEventListener('click',()=>change({...project,blocks:[]}));
-$('newButton').addEventListener('click',()=>{change({version:1,name:'我的新作品',sprite:'fox',backdrop:'meadow',blocks:[]});state=initialState();renderStage();toast('新作品准备好了，试着添加积木吧');});
+$('newButton').addEventListener('click',()=>{insertionTarget='root';change({version:1,name:'我的新作品',sprite:'fox',backdrop:'meadow',blocks:[]});state=initialState();renderStage();toast('新作品准备好了，试着添加积木吧');});
 $('undoButton').addEventListener('click',()=>{if(controller || !history.length)return;project=validateProject(JSON.parse(history.pop()));save();render();toast('已撤销上一次编辑');});
 $('projectName').addEventListener('change',()=>change({...project,name:$('projectName').value.trim() || '我的新作品'}));
 for(const [id,key] of [['spriteSelect','sprite'],['backdropSelect','backdrop']])$(id).addEventListener('change',()=>change({...project,[key]:$(id).value}));
