@@ -6,7 +6,7 @@ const option=(value,label)=>{const node=el('option','',label);node.value=value;r
 const keyNames={space:'空格',ArrowLeft:'← 左',ArrowRight:'右 →',ArrowUp:'↑ 上',ArrowDown:'↓ 下',meadow:'青草地',spaceBackdrop:'星空',paper:'方格纸'};
 function labelOption(value,field){return field.label==='背景'&&value==='space'?'星空':keyNames[value]||value;}
 export function createEditor({getProject,isRunning,onChange,notice,getState,getSensing,onAssets}){
-  let category='motion',target={id:'root',branch:'children'},activeSlot=null;
+  let category='events',target={id:'root',branch:'children'},activeSlot=null;
   const fieldLabel=(b,key)=>`${TYPES[b.type].label} · ${fieldsFor(b,getProject())[key].label}`;
   const defaults=type=>{const b=block(type),project=getProject();for(const [key,f] of Object.entries(TYPES[type].fields)){if(f.kind==='variable')b[key]=project.variables?.[0]?.name||'分数';if(f.kind==='procedure')b[key]=project.blocks.find(x=>x.type==='define')?.name||'小舞步';if(f.kind==='sound')b[key]=project.assets?.sounds[0]?.id||'';}if(type==='define'){b.parameters=[];delete b.parameter;}if(type==='call'){const def=project.blocks.find(x=>x.type==='define'&&x.name===b.name);b.arguments=(def?signature(def):[]).map(p=>({parameterId:p.id,value:parameterDefault(p.type)}));delete b.value;}return b;};
   function changedField(id,key,value,options={}){const p=getProject(),old=findBlock(p.blocks,id);let next=writeField(old,key,value);if(old.type==='call'&&key==='name'&&old.arguments){const def=p.blocks.find(x=>x.type==='define'&&x.name===value);next.arguments=(def?signature(def):[]).map(p=>({parameterId:p.id,value:parameterDefault(p.type)}));options={...options,render:true};}let blocks=editTree(p.blocks,id,()=>next);if(old.type==='define'&&key==='name'){const rename=items=>items.map(b=>({...b,...(b.type==='call'&&b.name===old.name?{name:value}:{}),...(b.children?{children:rename(b.children)}:{}),...(b.otherwise?{otherwise:rename(b.otherwise)}:{})}));blocks=rename(blocks);}return onChange({...p,blocks},options);}
@@ -18,7 +18,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     if((type==='setVar'||type==='changeVar')&&!p.variables?.length)p={...p,variables:[{name:'分数',value:0}]};
     const dest=d.event||d.definition?{id:'root',branch:'children'}:target;
     const blocks=dest.id==='root'?[...p.blocks,added]:editTree(p.blocks,dest.id,b=>({...b,[dest.branch]:[...b[dest.branch],added]}));
-    if(onChange({...p,blocks}))notice('已添加'+d.label+'积木');
+    if(onChange({...p,blocks})){if(d.event){target={id:added.id,branch:'children'};renderScript();}notice('已添加'+d.label+'积木'+(d.event?'，接下来添加的动作放在这个事件里':''));}
   }
   function choices(field,value){const p=getProject();let entries=field.options||[];if(field.kind==='variable')entries=(p.variables||[]).map(v=>v.name);if(field.kind==='procedure')entries=p.blocks.filter(b=>b.type==='define').map(b=>b.name);if(field.kind==='sound')entries=(p.assets?.sounds||[]).map(x=>x.id);if(field.label==='背景')entries=[...entries,...(p.assets?.backdrops||[]).map(x=>x.id)];if(!entries.includes(value))entries=[value,...entries];return entries;}
   function choiceLabel(value,spec){return (getProject().assets?.sounds||[]).concat(getProject().assets?.backdrops||[]).find(x=>x.id===value)?.name||(spec.kind==='sound'&&value===''?'请先录入声音':labelOption(value,spec));}
@@ -55,8 +55,9 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
   function buildList(blocks,id='root',branch='children'){
     const list=el('div','block-list');list.dataset.target=id;list.dataset.branch=branch;
     for(const b of blocks){
-      const d=TYPES[b.type],controlFrame=d.category==='control'&&d.container,wrapper=el('div',`code-block ${d.category}${controlFrame?' control-frame':''}${d.event?' event-hat':''}${d.definition?' definition-block':''}`);wrapper.dataset.id=b.id;
+      const d=TYPES[b.type],controlFrame=d.category==='control'&&d.container,wrapper=el('div',`code-block ${d.category}${controlFrame?' control-frame':''}${d.event?' event-hat event-script':''}${d.definition?' definition-block':''}${id==='root'&&!d.event&&!d.definition?' unattached-block':''}`);wrapper.dataset.id=b.id;
       const row=el('div','block-row');row.draggable=!isRunning();row.append(el('span','grip','⠿'),el('span','block-label',d.label));
+      if(id==='root'&&(d.event||d.definition))wrapper.append(el('div','script-group-label',d.definition?'自制积木定义':'独立事件脚本'));
       const fields=fieldsFor(b,getProject());for(const [key,spec] of Object.entries(fields)){if(Object.keys(fields).length>1)row.append(el('span','field-label',spec.label));row.append(fieldControl(b,key,spec));}
       if(d.unit)row.append(document.createTextNode(d.unit));
       const actions=el('span','block-actions');for(const [text,label,dir] of [['↑','上移',-1],['↓','下移',1],['×','删除',0]]){const btn=el('button','',text);btn.disabled=isRunning();btn.setAttribute('aria-label',label+d.label+'积木');btn.addEventListener('click',()=>onChange({...getProject(),blocks:dir?moveInTree(getProject().blocks,b.id,dir):editTree(getProject().blocks,b.id,()=>[])}));actions.append(btn);}row.append(actions);wrapper.append(row);
@@ -76,7 +77,9 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
   function renderScript(){
     const p=getProject();if(target.id!=='root'&&!findBlock(p.blocks,target.id))target={id:'root',branch:'children'};
     const next=buildList(p.blocks);next.id='script';next.classList.add('root-list');
-    const addRoot=el('button','add-root',target.id==='root'?'＋ 拖入积木，或点击积木盒添加':'＋ 改为向程序末尾添加');addRoot.disabled=isRunning();addRoot.addEventListener('click',()=>{target={id:'root',branch:'children'};renderScript();notice('接下来将添加到主程序末尾');});next.append(addRoot);$('script').replaceWith(next);$('blockCount').textContent=`${countBlocks(p.blocks)} 块积木`;
+    if(!p.blocks.length)next.append(el('p','empty-event-tip','从“事件”选择一种启动方式，再添加动作。没有固定主程序。'));
+    if(p.blocks.some(b=>!TYPES[b.type].event&&!TYPES[b.type].definition))next.prepend(el('p','unattached-note','未连接事件的积木不会自动运行，请放入一个事件脚本。'));
+    const addRoot=el('button','add-root',target.id==='root'?'＋ 在外层添加事件或游离积木':'＋ 改为在外层添加独立脚本');addRoot.id='addRootButton';addRoot.disabled=isRunning();addRoot.addEventListener('click',()=>{target={id:'root',branch:'children'};renderScript();notice('接下来添加到外层；动作需要连接事件才会执行');});next.append(addRoot);$('script').replaceWith(next);$('blockCount').textContent=`${countBlocks(p.blocks)} 块积木 · ${p.blocks.filter(b=>TYPES[b.type].event).length} 个事件`;
   }
   function renderTools(){
     const tools=$('categoryTools');tools.replaceChildren();const p=getProject();
@@ -141,5 +144,5 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
       onChange({...p,blocks,...((moving.type==='setVar'||moving.type==='changeVar')&&!p.variables?.length?{variables:[{name:'分数',value:0}]}:{})});
     }catch(error){notice(error.message);}
   });
-  return {render(){renderPalette();renderScript();},renderScript,resetTarget(){target={id:'root',branch:'children'};activeSlot=null;},add};
+  return {render(){renderPalette();renderScript();},renderScript,resetTarget(){target={id:'root',branch:'children'};category='events';activeSlot=null;},add};
 }
