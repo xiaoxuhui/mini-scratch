@@ -1,5 +1,15 @@
 # GitHub 与大厅接入报告
 
+## v0.2 更新已上线
+
+2026-10-15。来源固定 `10d7d0566693764d2de2d83c828f0fabd2fd7102`，九类积木与画笔共69种；42/42测试、构建与桌面/手机/单文件浏览器检查通过。[来源CI](https://github.com/xiaoxuhui/mini-scratch/actions/runs/38753577199)成功。
+
+大厅序列9已发布0.2.0 / 资源#2，完整历史与其他游戏保留，无需更换APK。ZIP asset644169215，188863字节，SHA-256 `12d3953b9369755e246e1a3859a506f86cf9db2f120a29efbae13e125a5aadec`；签名目录asset644172022，SHA-256 `d4970f1be88b4afc02878cfa0a0eb92617b241ee1642b031e8696c7851056a9e`。匿名结果：`Verified online sequence 9, 10 cumulative resources across 9 signed catalogs`。
+
+大厅点“立即检查”获取更新；未安装的在“游戏目录”安装。新版独立v2作品槽、旧槽及首次升级备份保留；旧版后续编辑不会合并进新版。本轮未做Android设备实测，返回值拖拽、文件往返与听音验收边界见v0.2测试报告。完整[大厅N15发行记录](https://github.com/xiaoxuhui/game-hub/blob/main/doc/evidence/n15-mini-scratch-v02-release.md)。
+
+## 首次接入历史
+
 日期：2026-10-15。用户要求的两项工作均已完成：
 
 1. 新建公开仓库 [xiaoxuhui/mini-scratch](https://github.com/xiaoxuhui/mini-scratch)，main 含完整历史、源码、离线产物、MIT 许可及 CI。初次推送 SHA `8c3bad2a0a9f71053bc2dfb132f7ca4417a182a4` 已用 git ls-remote 核对；后续报告提交不改变固定运行资源。
