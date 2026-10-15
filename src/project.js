@@ -23,12 +23,12 @@ export function validateProject(raw){
     if(spec.kind==='choice'){if(!spec.options.includes(value)&&!(spec.label==='背景'&&assets?.backdrops.some(x=>x.id===value)))throw new Error('积木选项无效');return value;}
     return named(value);
   };
-  const parse=(items,depth)=>{
+  const parse=(items,depth,nested=false)=>{
     if(!Array.isArray(items)||depth>8)throw new Error('积木嵌套最多 8 层');
     return items.map(item=>{
-      if(++total>300)throw new Error('最多使用 300 块积木');
+      const limit=raw.eventScripts===true?301:300;if(++total>limit)throw new Error(`最多使用 ${limit} 块积木`);
       if(!item||!Object.hasOwn(TYPES,item.type)||TYPES[item.type].reporter)throw new Error('包含未知积木或返回值放在了程序区');
-      const d=TYPES[item.type];if((d.event||d.definition)&&depth!==0)throw new Error('事件与定义积木必须放在程序最外层');
+      const d=TYPES[item.type];if((d.event||d.definition)&&nested)throw new Error('事件与定义积木必须放在程序最外层');
       const id=typeof item.id==='string'&&item.id.length<100&&!ids.has(item.id)?item.id:uid();ids.add(id);
       const specs={...d.fields};if(item.type==='define'&&item.parameters!==undefined)delete specs.parameter;if(item.type==='call'&&item.arguments!==undefined)delete specs.value;
       const b={id,type:item.type,...Object.fromEntries(Object.entries(specs).map(([key,s])=>[key,field(item[key],s)]))};
@@ -38,12 +38,13 @@ export function validateProject(raw){
       }
       if(item.type==='call'&&item.arguments!==undefined){if(!Array.isArray(item.arguments)||item.arguments.length>2000)throw new Error('调用参数过多');const used=new Set();b.arguments=item.arguments.map(a=>{const parameterId=field(a?.parameterId,{kind:'reference'});if(used.has(parameterId))throw new Error('调用参数不能重复');used.add(parameterId);return {parameterId,value:field(a.value,{kind:'value',expression:true})};});}
       if(b.type==='repeat'&&!isExpression(b.value))b.value=Math.floor(b.value);
-      if(d.container)b.children=parse(item.children,depth+1);
-      if(d.otherwise)b.otherwise=parse(item.otherwise,depth+1);
+      if(d.container)b.children=parse(item.children,depth+(d.event?0:1),true);
+      if(d.otherwise)b.otherwise=parse(item.otherwise,depth+1,true);
       return b;
     });
   };
   const result={version:1,name:String(raw.name||'我的新作品').slice(0,40),sprite:['fox','rabbit','robot'].includes(raw.sprite)||assets?.sprites.some(x=>x.id===raw.sprite)?raw.sprite:'fox',backdrop:['meadow','space','paper'].includes(raw.backdrop)||assets?.backdrops.some(x=>x.id===raw.backdrop)?raw.backdrop:'meadow',blocks:parse(raw.blocks,0),...(assets?{assets}:{})};
+  if(raw.eventScripts!==undefined){if(typeof raw.eventScripts!=='boolean')throw new Error('事件脚本标记无效');result.eventScripts=raw.eventScripts;}
   const definitions=result.blocks.filter(b=>b.type==='define').map(b=>b.name);
   if(new Set(definitions).size!==definitions.length)throw new Error('自制积木名称不能重复');
   if(raw.variables!==undefined){

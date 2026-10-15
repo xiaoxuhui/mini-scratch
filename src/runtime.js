@@ -93,7 +93,7 @@ export function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onErr
   function dispatch(type,value){check();return Promise.all(hats.filter(b=>b.type===type&&(type==='whenKey'?b.key===value:type==='whenMessage'?b.name===value:true)).map(b=>launch(b.children,b.id)));}
   return {
     state,signal:local,hasListeners,
-    async start(){check();if(started)throw new Error('同一会话只能启动一次');started=true;const legacy=root.filter(b=>!TYPES[b.type]?.event&&b.type!=='define');try{await Promise.all([...(legacy.length?[launch(legacy)]:[]),dispatch('whenFlag')]);}catch(error){throw failure||error;}if(failure)throw failure;},
+    async start({triggerFlag=true}={}){check();if(started)throw new Error('同一会话只能启动一次');started=true;const legacy=triggerFlag&&project.eventScripts!==true?root.filter(b=>!TYPES[b.type]?.event&&b.type!=='define'):[];try{await Promise.all([...(legacy.length?[launch(legacy)]:[]),...(triggerFlag?[dispatch('whenFlag')]:[])]);}catch(error){throw failure||error;}if(failure)throw failure;},
     triggerKey:key=>dispatch('whenKey',key),triggerClick:()=>dispatch('whenClick'),broadcast:name=>dispatch('whenMessage',name),
     async drain(){while(jobs.size){await Promise.allSettled([...jobs]);}if(failure)throw failure;check();return state;},
     stop(){controller.abort();signal?.removeEventListener('abort',externalAbort);},
