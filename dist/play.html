@@ -762,8 +762,9 @@ const {TYPES,block}=__modules["blocks.js"];
 function migrateEventScripts(project){
   if(project.eventScripts===true)return project;
   const loose=b=>!TYPES[b.type]?.event&&!TYPES[b.type]?.definition,actions=project.blocks.filter(loose);
-  const hat=actions.length?block('whenFlag',{children:actions}):null;let inserted=false;
-  const blocks=project.blocks.flatMap(b=>{if(!loose(b))return [b];if(inserted)return [];inserted=true;return [hat];});
+  // Legacy start queued the loose script before every explicit green-flag hat.
+  const hat=actions.length?block('whenFlag',{children:actions}):null;
+  const blocks=[...(hat?[hat]:[]),...project.blocks.filter(b=>!loose(b))];
   return {...project,eventScripts:true,blocks};
 }
 function matchesEvent(project,kind,value){return project.blocks.some(b=>kind==='key'?b.type==='whenKey'&&b.key===value:kind==='click'?b.type==='whenClick':kind==='flag'?b.type==='whenFlag':false);}
