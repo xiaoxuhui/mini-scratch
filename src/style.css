@@ -35,3 +35,5 @@
 
 /* v0.4 independent event groups */
 .root-list>.event-script,.root-list>.definition-block{margin:18px 0 32px}.root-list>.event-script:after,.root-list>.definition-block:after{display:none}.script-group-label{font-size:10px;color:#8d7c68;background:#fcfbfe;padding:0 0 7px;letter-spacing:.5px}.root-list>.unattached-block{opacity:.78;margin-bottom:10px}.unattached-note,.empty-event-tip{font-size:11px;line-height:1.9;color:#9783a9;margin:0 0 18px;padding:12px;border:1px dashed #d7c8e6;border-radius:8px;background:#f9f5ff}.count-badge{white-space:nowrap}.script-scroll{padding-top:16px}@media(max-width:600px){.root-list>.event-script,.root-list>.definition-block{margin:12px 0 26px}.script-group-label{font-size:8px}.unattached-note,.empty-event-tip{font-size:9px;padding:8px}.count-badge{font-size:8px;padding:5px}.editor-hint{font-size:8px}}
+
+.root-list>.event-script,.root-list>.definition-block{margin-top:27px}.script-group-label{position:absolute;top:-19px;left:0;padding:0;background:transparent;pointer-events:none}.event-script>.block-row:before{display:none}
