@@ -1,7 +1,8 @@
 import {TYPES} from './blocks.js';
 import {evaluate,numeric,truth} from './expressions.js';
 import {parameterDefault} from './procedures.js';
-export const initialState=(project={})=>({x:0,y:0,angle:0,speech:'',thought:false,pen:false,lines:[],visible:true,size:100,costume:project.sprite||'fox',backdrop:project.backdrop||'meadow',volume:80,timerStart:0,variables:new Map((project.variables||[]).map(v=>[v.name,v.value]))});
+import {mutateList,listValue} from './lists.js';
+export const initialState=(project={})=>({x:0,y:0,angle:0,speech:'',thought:false,pen:false,lines:[],visible:true,size:100,costume:project.sprite||'fox',backdrop:project.backdrop||'meadow',volume:80,timerStart:0,variables:new Map((project.variables||[]).map(v=>[v.name,v.value])),lists:new Map((project.lists||[]).map(v=>[v.name,v.items.map(listValue)]))});
 export function delay(ms,signal){return new Promise((resolve,reject)=>{const abort=()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);reject(new DOMException('已停止','AbortError'));};const timer=setTimeout(()=>{signal?.removeEventListener('abort',abort);resolve();},ms);if(signal?.aborted)abort();else signal?.addEventListener('abort',abort,{once:true});});}
 class StopScript extends Error {}
 export function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onError=()=>{},sleep=delay,pace=180,sensing=()=>({}),clock=()=>performance.now()/1000,random=Math.random}={}){
@@ -74,6 +75,7 @@ export function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onErr
         case 'broadcast':dispatch('whenMessage',b.name).catch(()=>{});break;
         case 'resetTimer':state.timerStart=clock();break;
         case 'setVar':case 'changeVar':if(!state.variables.has(b.name))throw new Error('变量不存在：'+b.name);state.variables.set(b.name,b.type==='setVar'?val(b,'value',scope):numeric(state.variables.get(b.name))+num(b,'value',scope));if(typeof state.variables.get(b.name)==='number'&&!Number.isFinite(state.variables.get(b.name)))throw new Error('变量超出有限数值范围');break;
+        case 'listAdd':case 'listReplace':case 'listInsert':case 'listDelete':case 'listClear':mutateList(state,b,key=>val(b,key,scope));break;
         case 'penDown':state.pen=true;break;case 'penUp':state.pen=false;break;case 'clear':state.lines=[];break;
         case 'define':case 'whenFlag':case 'whenKey':case 'whenClick':case 'whenMessage':continue;
         default:throw new Error('未知的执行积木：'+b.type);

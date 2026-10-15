@@ -48,6 +48,13 @@ define('join','operators','连接文本',{a:v('文本一','你好'),b:v('文本�
 define('setVar','variables','变量设为',{name:nameField('变量','分数','variable'),value:v('值',0)});
 define('changeVar','variables','变量增加',{name:nameField('变量','分数','variable'),value:n('增加量',1)});
 define('variable','variables','变量的值',{name:nameField('变量','分数','variable')},{reporter:true});
+define('listAdd','variables','添加到列表末尾',{name:nameField('列表','清单','list'),value:v('内容','新项目')});
+define('listReplace','variables','替换列表项',{name:nameField('列表','清单','list'),index:n('序号',1),value:v('内容','新内容')});
+define('listInsert','variables','插入列表项',{name:nameField('列表','清单','list'),index:n('序号',1),value:v('内容','新项目')});
+define('listDelete','variables','删除列表项',{name:nameField('列表','清单','list'),index:n('序号',1)});
+define('listClear','variables','清空列表',{name:nameField('列表','清单','list')});
+define('listItem','variables','列表第几项',{name:nameField('列表','清单','list'),index:n('序号',1)},{reporter:true});
+define('listLength','variables','列表长度',{name:nameField('列表','清单','list')},{reporter:true});
 define('define','custom','定义积木',{name:nameField('名称','小舞步'),parameter:nameField('参数名','步数')},{container:true,definition:true});
 define('call','custom','调用积木',{name:nameField('名称','小舞步','procedure'),value:v('参数',60)});
 define('argument','custom','本次调用的参数',{}, {reporter:true});
