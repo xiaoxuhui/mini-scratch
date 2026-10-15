@@ -5,7 +5,7 @@ import {SPRITES} from './sprites.js';
 import {loadProject,saveProject} from './persistence.js';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={fox:'小狐狸',rabbit:'小兔子',robot:'小机器人'},backdrops={meadow:'青草地',space:'星空',paper:'方格纸'};
-const history=[],audio=createAudio(),senses={mouseX:0,mouseY:0,mouseDown:false,keys:new Set()};
+const history=[],audio=createAudio(()=>{if(state)renderStage();}),senses={mouseX:0,mouseY:0,mouseDown:false,keys:new Set()};
 let project=example(),state,controller=null,runtime=null,toastTimer,bootMessage='',audioProblem='';
 try{project=loadProject(localStorage)||project;}catch{bootMessage='存档无法读取，已载入示例；原存档保留，编辑后才会保存。';}
 state=initialState(project);
@@ -14,12 +14,12 @@ function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;
 function save(){try{saveProject(localStorage,project);$('saveStatus').textContent='● 已保存到本机';}catch{$('saveStatus').textContent='保存失败，请导出备份';}}
 function change(next,{render:shouldRender=true,record=true,quiet=false}={}){
   if(controller)return false;
-  try{const valid=validateProject(next);if(JSON.stringify(valid)===JSON.stringify(project))return true;if(record){history.push(JSON.stringify(project));if(history.length>30)history.shift();}if(valid.sprite!==project.sprite)state.costume=valid.sprite;if(valid.backdrop!==project.backdrop)state.backdrop=valid.backdrop;project=valid;save();if(shouldRender)render();else $('undoButton').disabled=!history.length;return true;}
+  try{const valid=validateProject(next);if(JSON.stringify(valid)===JSON.stringify(project))return true;if(record){history.push(JSON.stringify(project));if(history.length>30)history.shift();}if(valid.sprite!==project.sprite)state.costume=valid.sprite;if(valid.backdrop!==project.backdrop)state.backdrop=valid.backdrop;if(JSON.stringify(valid.variables)!==JSON.stringify(project.variables))state.variables=new Map((valid.variables||[]).map(v=>[v.name,v.value]));project=valid;save();if(shouldRender)render();else $('undoButton').disabled=!history.length;return true;}
   catch(error){if(!quiet)toast(error.message);return false;}
 }
 const editor=createEditor({getProject:()=>project,isRunning:()=>!!controller,onChange:change,notice:toast,getState:()=>state,getSensing:()=>senses});
 function renderMonitor(){
-  const values=controller?state.variables:new Map((project.variables||[]).map(v=>[v.name,v.value]));
+  const values=state.variables;
   $('variableMonitor').replaceChildren();for(const [name,value] of values){const row=element('div','variable-watch');row.append(element('span','',name),element('strong','',String(value)));$('variableMonitor').append(row);}
 }
 function renderStage(){
@@ -29,7 +29,7 @@ function renderStage(){
   $('spriteThumbnail').innerHTML=`<svg viewBox="-45 -50 90 100" aria-hidden="true">${SPRITES[costume]}</svg>`;
   $('drawing').replaceChildren(...state.lines.map(line=>{const node=document.createElementNS(NS,'line');for(const key of ['x1','x2'])node.setAttribute(key,240+line[key]);for(const key of ['y1','y2'])node.setAttribute(key,180-line[key]);return node;}));
   $('speech').hidden=!state.speech;$('speech').textContent=(state.thought?'💭 ':'')+state.speech;$('speech').style.left=`${Math.max(7,Math.min(67,(240+state.x)/480*100))}%`;$('speech').style.top=`${Math.max(27,Math.min(88,(180-state.y)/360*100-14))}%`;
-  $('xValue').textContent=Math.round(state.x);$('yValue').textContent=Math.round(state.y);$('angleValue').textContent=Math.round(state.angle)+'°';$('spriteName').textContent=names[costume];$('audioStatus').textContent='音量 '+Math.round(state.volume)+'%'+(audioProblem?' · '+audioProblem:'');renderMonitor();
+  $('xValue').textContent=Math.round(state.x);$('yValue').textContent=Math.round(state.y);$('angleValue').textContent=Math.round(state.angle)+'°';$('spriteName').textContent=names[costume];$('audioStatus').textContent='音量 '+Math.round(state.volume)+'%'+(audio.activeCount?' · ♫ 播放中':'')+(audioProblem?' · '+audioProblem:'');renderMonitor();
 }
 function render(){
   $('projectName').value=project.name;$('spriteSelect').value=project.sprite;$('backdropSelect').value=project.backdrop;document.body.classList.toggle('running',!!controller);

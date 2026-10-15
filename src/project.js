@@ -7,7 +7,7 @@ export function validateProject(raw){
   const field=(value,spec,depth=0)=>{
     if(++values>2000)throw new Error('参数节点过多');
     if(isExpression(value)){
-      if(!spec.expression||depth>8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('返回值类型不正确或嵌套超过 8 层');
+      if(!spec.expression||depth>=8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('返回值类型不正确或嵌套超过 8 层');
       const d=TYPES[value.type];return {type:value.type,...Object.fromEntries(Object.entries(d.fields).map(([key,s])=>[key,field(value[key],s,depth+1)]))};
     }
     if(spec.kind==='number'){

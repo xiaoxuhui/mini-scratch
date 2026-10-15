@@ -48,7 +48,7 @@
         <div class="stage-panel panel">
           <div class="stage-toolbar"><div class="stage-title"><span class="stage-label">舞台</span><span class="stage-size">480 × 360</span></div><div class="run-controls"><button id="runButton" class="run-button" aria-label="运行作品"><span>⚑</span> 运行</button><button id="stopButton" class="stop-button" aria-label="停止执行" disabled><span>■</span></button><span class="control-divider"></span><button id="resetButton" class="icon-button" aria-label="舞台复位" title="舞台复位">↺</button></div></div>
           <div id="stage" class="stage meadow">
-            <svg id="stageSvg" viewBox="0 0 480 360" role="img" aria-label="角色舞台与绘画结果">
+            <svg id="stageSvg" viewBox="0 0 480 360" role="group" aria-label="角色舞台与绘画结果">
               <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="0.8" fill="currentColor" opacity=".14"/></pattern></defs>
               <g class="meadow-art"><circle cx="400" cy="64" r="27" fill="#fff0b0"/><path d="M0 270Q90 190 200 267T480 240V360H0" fill="#c7ddbb"/><path d="M0 310Q155 230 330 310T480 282V360H0" fill="#a8c69a"/><path d="M55 83h65a16 16 0 0 0-20-20 22 22 0 0 0-42 8 6 6 0 0 0-3 12m232 35h46a12 12 0 0 0-15-15 16 16 0 0 0-31 7 4 4 0 0 0 0 8" fill="#fff" opacity=".8"/></g>
               <g class="space-art" fill="#fff"><circle cx="50" cy="60" r="2"/><circle cx="390" cy="80" r="3"/><circle cx="300" cy="30" r="2"/><circle cx="80" cy="240" r="2"/><circle cx="410" cy="290" r="2"/><circle cx="160" cy="100" r="1.5"/><circle cx="340" cy="190" r="1.5"/><circle cx="350" cy="90" r="24" fill="#9a8acb"/><ellipse cx="350" cy="90" rx="43" ry="9" fill="none" stroke="#c1b2ee" stroke-width="4" transform="rotate(-25 350 90)"/></g>
@@ -152,7 +152,7 @@ function validateProject(raw){
   const field=(value,spec,depth=0)=>{
     if(++values>2000)throw new Error('参数节点过多');
     if(isExpression(value)){
-      if(!spec.expression||depth>8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('返回值类型不正确或嵌套超过 8 层');
+      if(!spec.expression||depth>=8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('返回值类型不正确或嵌套超过 8 层');
       const d=TYPES[value.type];return {type:value.type,...Object.fromEntries(Object.entries(d.fields).map(([key,s])=>[key,field(value[key],s,depth+1)]))};
     }
     if(spec.kind==='number'){
@@ -209,7 +209,7 @@ const numeric=value=>{const n=Number(value);if(!Number.isFinite(n))throw new Err
 const truth=value=>!(value===false||value===0||value===''||value==='0'||String(value).toLowerCase()==='false');
 function evaluate(value,context={},depth=0){
   if(!isExpression(value))return value;
-  if(depth>8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('无效的返回值积木');
+  if(depth>=8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('无效的返回值积木');
   const e=v=>evaluate(v,context,depth+1),n=v=>numeric(e(v));
   const state=context.state||{},sense=context.sensing?.()||{},variables=state.variables||new Map();
   const compare=(a,b)=>{const x=Number(a),y=Number(b);return typeof a!=='boolean'&&typeof b!=='boolean'&&a!==''&&b!==''&&Number.isFinite(x)&&Number.isFinite(y)?[x,y]:[String(a),String(b)];};
@@ -330,7 +330,7 @@ function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onError=()=>
   function dispatch(type,value){check();return Promise.all(hats.filter(b=>b.type===type&&(type==='whenKey'?b.key===value:type==='whenMessage'?b.name===value:true)).map(b=>launch(b.children,b.id)));}
   return {
     state,signal:local,hasListeners,
-    async start(){check();if(started)throw new Error('同一会话只能启动一次');started=true;const legacy=root.filter(b=>!TYPES[b.type]?.event&&b.type!=='define');await Promise.all([...(legacy.length?[launch(legacy)]:[]),dispatch('whenFlag')]);},
+    async start(){check();if(started)throw new Error('同一会话只能启动一次');started=true;const legacy=root.filter(b=>!TYPES[b.type]?.event&&b.type!=='define');try{await Promise.all([...(legacy.length?[launch(legacy)]:[]),dispatch('whenFlag')]);}catch(error){throw failure||error;}if(failure)throw failure;},
     triggerKey:key=>dispatch('whenKey',key),triggerClick:()=>dispatch('whenClick'),broadcast:name=>dispatch('whenMessage',name),
     async drain(){while(jobs.size){await Promise.allSettled([...jobs]);}if(failure)throw failure;check();return state;},
     stop(){controller.abort();signal?.removeEventListener('abort',externalAbort);},
@@ -479,10 +479,10 @@ function createEditor({getProject,isRunning,onChange,notice,getState,getSensing}
 return {createEditor};
 })();
 __modules["audio.js"]=(()=>{
-function createAudio(){
+function createAudio(onChange=()=>{}){
   let context=null;const active=new Set();
   async function unlock(){const Audio=globalThis.AudioContext||globalThis.webkitAudioContext;if(!Audio)throw new Error('当前浏览器不支持声音合成');if(!context)context=new Audio();if(context.state==='suspended')await context.resume();if(context.state!=='running')throw new Error('声音尚未启用，请再次点击绿旗');}
-  function stop(){for(const oscillator of active){try{oscillator.stop();}catch{/* Oscillator may already have ended. */}}active.clear();}
+  function stop(){for(const oscillator of active){try{oscillator.stop();}catch{/* Oscillator may already have ended. */}}active.clear();onChange();}
   function play(event){
     if(event.kind==='stop'){stop();return;}
     if(!context||context.state!=='running')throw new Error('声音尚未启用，请点击绿旗重试');
@@ -490,7 +490,7 @@ function createAudio(){
     oscillator.type='sine';oscillator.frequency.value=event.frequency;
     gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(event.volume/100*0.18,now+0.01);gain.gain.setValueAtTime(event.volume/100*0.18,now+Math.max(0.01,event.seconds-0.02));gain.gain.linearRampToValueAtTime(0,now+event.seconds);
     oscillator.connect(gain);gain.connect(context.destination);active.add(oscillator);
-    oscillator.onended=()=>{active.delete(oscillator);oscillator.disconnect();gain.disconnect();};oscillator.start();oscillator.stop(now+event.seconds);
+    oscillator.onended=()=>{active.delete(oscillator);oscillator.disconnect();gain.disconnect();onChange();};oscillator.start();oscillator.stop(now+event.seconds);onChange();
   }
   return {unlock,play,stop,get activeCount(){return active.size;},get status(){return context?.state||'未启用';}};
 }
@@ -530,7 +530,7 @@ const {SPRITES}=__modules["sprites.js"];
 const {loadProject,saveProject}=__modules["persistence.js"];
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={fox:'小狐狸',rabbit:'小兔子',robot:'小机器人'},backdrops={meadow:'青草地',space:'星空',paper:'方格纸'};
-const history=[],audio=createAudio(),senses={mouseX:0,mouseY:0,mouseDown:false,keys:new Set()};
+const history=[],audio=createAudio(()=>{if(state)renderStage();}),senses={mouseX:0,mouseY:0,mouseDown:false,keys:new Set()};
 let project=example(),state,controller=null,runtime=null,toastTimer,bootMessage='',audioProblem='';
 try{project=loadProject(localStorage)||project;}catch{bootMessage='存档无法读取，已载入示例；原存档保留，编辑后才会保存。';}
 state=initialState(project);
@@ -539,12 +539,12 @@ function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;
 function save(){try{saveProject(localStorage,project);$('saveStatus').textContent='● 已保存到本机';}catch{$('saveStatus').textContent='保存失败，请导出备份';}}
 function change(next,{render:shouldRender=true,record=true,quiet=false}={}){
   if(controller)return false;
-  try{const valid=validateProject(next);if(JSON.stringify(valid)===JSON.stringify(project))return true;if(record){history.push(JSON.stringify(project));if(history.length>30)history.shift();}if(valid.sprite!==project.sprite)state.costume=valid.sprite;if(valid.backdrop!==project.backdrop)state.backdrop=valid.backdrop;project=valid;save();if(shouldRender)render();else $('undoButton').disabled=!history.length;return true;}
+  try{const valid=validateProject(next);if(JSON.stringify(valid)===JSON.stringify(project))return true;if(record){history.push(JSON.stringify(project));if(history.length>30)history.shift();}if(valid.sprite!==project.sprite)state.costume=valid.sprite;if(valid.backdrop!==project.backdrop)state.backdrop=valid.backdrop;if(JSON.stringify(valid.variables)!==JSON.stringify(project.variables))state.variables=new Map((valid.variables||[]).map(v=>[v.name,v.value]));project=valid;save();if(shouldRender)render();else $('undoButton').disabled=!history.length;return true;}
   catch(error){if(!quiet)toast(error.message);return false;}
 }
 const editor=createEditor({getProject:()=>project,isRunning:()=>!!controller,onChange:change,notice:toast,getState:()=>state,getSensing:()=>senses});
 function renderMonitor(){
-  const values=controller?state.variables:new Map((project.variables||[]).map(v=>[v.name,v.value]));
+  const values=state.variables;
   $('variableMonitor').replaceChildren();for(const [name,value] of values){const row=element('div','variable-watch');row.append(element('span','',name),element('strong','',String(value)));$('variableMonitor').append(row);}
 }
 function renderStage(){
@@ -554,7 +554,7 @@ function renderStage(){
   $('spriteThumbnail').innerHTML=`<svg viewBox="-45 -50 90 100" aria-hidden="true">${SPRITES[costume]}</svg>`;
   $('drawing').replaceChildren(...state.lines.map(line=>{const node=document.createElementNS(NS,'line');for(const key of ['x1','x2'])node.setAttribute(key,240+line[key]);for(const key of ['y1','y2'])node.setAttribute(key,180-line[key]);return node;}));
   $('speech').hidden=!state.speech;$('speech').textContent=(state.thought?'💭 ':'')+state.speech;$('speech').style.left=`${Math.max(7,Math.min(67,(240+state.x)/480*100))}%`;$('speech').style.top=`${Math.max(27,Math.min(88,(180-state.y)/360*100-14))}%`;
-  $('xValue').textContent=Math.round(state.x);$('yValue').textContent=Math.round(state.y);$('angleValue').textContent=Math.round(state.angle)+'°';$('spriteName').textContent=names[costume];$('audioStatus').textContent='音量 '+Math.round(state.volume)+'%'+(audioProblem?' · '+audioProblem:'');renderMonitor();
+  $('xValue').textContent=Math.round(state.x);$('yValue').textContent=Math.round(state.y);$('angleValue').textContent=Math.round(state.angle)+'°';$('spriteName').textContent=names[costume];$('audioStatus').textContent='音量 '+Math.round(state.volume)+'%'+(audio.activeCount?' · ♫ 播放中':'')+(audioProblem?' · '+audioProblem:'');renderMonitor();
 }
 function render(){
   $('projectName').value=project.name;$('spriteSelect').value=project.sprite;$('backdropSelect').value=project.backdrop;document.body.classList.toggle('running',!!controller);

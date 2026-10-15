@@ -3,7 +3,7 @@ export const numeric=value=>{const n=Number(value);if(!Number.isFinite(n))throw 
 export const truth=value=>!(value===false||value===0||value===''||value==='0'||String(value).toLowerCase()==='false');
 export function evaluate(value,context={},depth=0){
   if(!isExpression(value))return value;
-  if(depth>8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('无效的返回值积木');
+  if(depth>=8||!Object.hasOwn(TYPES,value.type)||!TYPES[value.type].reporter)throw new Error('无效的返回值积木');
   const e=v=>evaluate(v,context,depth+1),n=v=>numeric(e(v));
   const state=context.state||{},sense=context.sensing?.()||{},variables=state.variables||new Map();
   const compare=(a,b)=>{const x=Number(a),y=Number(b);return typeof a!=='boolean'&&typeof b!=='boolean'&&a!==''&&b!==''&&Number.isFinite(x)&&Number.isFinite(y)?[x,y]:[String(a),String(b)];};
