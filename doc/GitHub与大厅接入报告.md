@@ -1,5 +1,9 @@
 # GitHub 与大厅接入报告
 
+## v0.2.1 右开控制积木已上线
+
+2026-10-16，来源3b073c131fba1861be9214b8eefefffa4560ab96已推送；控制容器与预览改为右开横向U形，桌面和手机验收、42/42与构建核对通过。大厅资源#4/版本0.2.1，签名目录序列11已上线，保留手柄图标和现有存档。匿名结果：Verified online sequence 11, 12 cumulative resources across 11 signed catalogs。两仓库CI均成功，详见[大厅N18记录](https://github.com/xiaoxuhui/game-hub/blob/main/doc/evidence/n18-control-release.md)。大厅检查并更新后打开激活；本地单文件刷新即可。
+
 ## v0.2 更新已上线
 
 2026-10-15。来源固定 `10d7d0566693764d2de2d83c828f0fabd2fd7102`，九类积木与画笔共69种；42/42测试、构建与桌面/手机/单文件浏览器检查通过。[来源CI](https://github.com/xiaoxuhui/mini-scratch/actions/runs/38753577199)成功。
