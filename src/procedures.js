@@ -15,7 +15,7 @@ export function valueLabel(value,project){if(value.type==='parameter')return par
 export function isBoolean(value,project){return typeof value==='boolean'||isExpression(value)&&(TYPES[value.type]?.valueType==='boolean'||value.type==='parameter'&&parameterInfo(value,project)?.type==='boolean');}
 export function migrateProcedures(project){
   const out=structuredClone(project),defs=out.blocks.filter(b=>b.type==='define');
-  for(const def of defs)if(!def.parameters){def.parameters=[{id:uid(),name:def.parameter,type:'number'}];delete def.parameter;}
+  for(const def of defs)if(!def.parameters){def.parameters=[{id:uid(),name:def.parameter,type:'number',legacy:true}];delete def.parameter;}
   function values(value,def){if(!isExpression(value))return value;if(value.type==='argument'&&def)return {type:'parameter',definitionId:def.id,parameterId:def.parameters[0]?.id||'legacy'};return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,values(v,def)]));}
   function walk(items,scope){for(const b of items){const def=b.type==='define'?b:scope;if(b.type==='call'&&!b.arguments){const target=defs.find(d=>d.name===b.name);b.arguments=signature(target).map((p,i)=>({parameterId:p.id,value:i===0?values(b.value,def):parameterDefault(p.type)}));delete b.value;}for(const key of Object.keys(b))if(!['children','otherwise','arguments','parameters'].includes(key))b[key]=values(b[key],def);if(b.arguments)for(const arg of b.arguments)arg.value=values(arg.value,def);if(b.children)walk(b.children,def);if(b.otherwise)walk(b.otherwise,def);}}walk(out.blocks);return out;
 }

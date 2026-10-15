@@ -34,7 +34,7 @@ export function validateProject(raw){
       const b={id,type:item.type,...Object.fromEntries(Object.entries(specs).map(([key,s])=>[key,field(item[key],s)]))};
       if(item.type==='define'&&item.parameters!==undefined){
         if(!Array.isArray(item.parameters)||item.parameters.length>2000)throw new Error('参数列表过长');
-        const used=new Set(),names=new Set();b.parameters=item.parameters.map(p=>{if(++values>2000)throw new Error('参数节点过多');const pid=field(p?.id,{kind:'reference'}),name=named(p?.name);if(used.has(pid)||names.has(name)||!['number','string','boolean'].includes(p?.type))throw new Error('参数名称、ID 不能重复，类型必须有效');used.add(pid);names.add(name);return {id:pid,name,type:p.type};});
+        const used=new Set(),names=new Set();b.parameters=item.parameters.map(p=>{if(++values>2000)throw new Error('参数节点过多');const pid=field(p?.id,{kind:'reference'}),name=named(p?.name);if(used.has(pid)||names.has(name)||!['number','string','boolean'].includes(p?.type))throw new Error('参数名称、ID 不能重复，类型必须有效');used.add(pid);names.add(name);return {id:pid,name,type:p.type,...(p.legacy===true?{legacy:true}:{})};});
       }
       if(item.type==='call'&&item.arguments!==undefined){if(!Array.isArray(item.arguments)||item.arguments.length>2000)throw new Error('调用参数过多');const used=new Set();b.arguments=item.arguments.map(a=>{const parameterId=field(a?.parameterId,{kind:'reference'});if(used.has(parameterId))throw new Error('调用参数不能重复');used.add(parameterId);return {parameterId,value:field(a.value,{kind:'value',expression:true})};});}
       if(b.type==='repeat'&&!isExpression(b.value))b.value=Math.floor(b.value);

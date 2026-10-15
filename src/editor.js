@@ -1,4 +1,4 @@
-import {TYPES,CATEGORIES,block,expression,isExpression,findBlock,editTree,moveInTree,countBlocks,evaluate} from './core.js';
+import {TYPES,CATEGORIES,block,expression,isExpression,findBlock,editTree,moveInTree,countBlocks,evaluate,truth} from './core.js';
 import {fieldsFor,readField,writeField,signature,migrateProcedures,updateSignature,parameterDefault,parameterTypeNames,valueLabel,isBoolean} from './procedures.js';
 const $=id=>document.getElementById(id);
 function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
@@ -27,7 +27,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     let input;
     if(isExpression(value)){
       input=el('button',`expression-chip ${TYPES[value.type].category}${isBoolean(value,getProject())?' boolean-value':''}`,valueLabel(value,getProject()));input.type='button';input.setAttribute('aria-label','编辑'+fieldLabel(b,key)+'返回值');input.addEventListener('click',()=>openExpression(b.id,key));
-    }else if(boolean){input=el('select');input.append(option('true','真'),option('false','假'));input.value=String(Boolean(value));input.addEventListener('change',()=>changedField(b.id,key,input.value==='true'));
+    }else if(boolean){input=el('select');input.append(option('true','真'),option('false','假'));input.value=String(truth(value));input.addEventListener('change',()=>changedField(b.id,key,input.value==='true'));
     }else if(['choice','variable','procedure','sound'].includes(spec.kind)){
       input=el('select');for(const item of choices(spec,value))input.append(option(item,choiceLabel(item,spec)));input.value=value;input.addEventListener('change',()=>changedField(b.id,key,input.value));
     }else{
@@ -46,8 +46,8 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     box.append(el('p','signature-hint','参数名可直接拖入定义内的白色参数，也可点击放入。'));
     for(const p of params){
       const row=el('div','signature-row'),value=expression('parameter',{definitionId:b.id,parameterId:p.id}),chip=el('button','parameter-name custom'+(p.type==='boolean'?' boolean-value':''),p.name);chip.draggable=!isRunning();chip.disabled=isRunning();chip.setAttribute('aria-label','使用参数'+p.name);chip.addEventListener('dragstart',e=>{e.stopPropagation();e.dataTransfer.setData('application/x-block',JSON.stringify({expression:value}));e.dataTransfer.effectAllowed='copy';});chip.addEventListener('click',()=>openExpression(null,null,value));
-      const name=el('input');name.value=p.name;name.maxLength=20;name.disabled=isRunning();name.setAttribute('aria-label','参数名称 '+p.name);name.addEventListener('change',()=>onChange(updateSignature(getProject(),b.id,params.map(x=>x.id===p.id?{...x,name:name.value}:x))));
-      const type=el('select');type.disabled=isRunning();type.setAttribute('aria-label','参数类型 '+p.name);for(const [key,label] of Object.entries(parameterTypeNames))type.append(option(key,label));type.value=p.type;type.addEventListener('change',()=>onChange(updateSignature(getProject(),b.id,params.map(x=>x.id===p.id?{...x,type:type.value}:x))));
+      const name=el('input');name.value=p.name;name.maxLength=20;name.disabled=isRunning();name.setAttribute('aria-label','参数名称 '+p.name);let recorded=false;const rename=quiet=>{const current=getProject().blocks.find(x=>x.id===b.id);const ok=onChange(updateSignature(getProject(),b.id,signature(current).map(x=>x.id===p.id?{...x,name:name.value}:x)),{render:false,record:!recorded,quiet});if(ok)recorded=true;return ok;};name.addEventListener('input',()=>rename(true));name.addEventListener('blur',()=>{rename(false);renderScript();renderPalette();});
+      const type=el('select');type.disabled=isRunning();type.setAttribute('aria-label','参数类型 '+p.name);for(const [key,label] of Object.entries(parameterTypeNames))type.append(option(key,label));type.value=p.type;if(p.legacy)type.title='旧参数保留原值；选择类型后启用转换';type.addEventListener('change',()=>onChange(updateSignature(getProject(),b.id,params.map(x=>x.id===p.id?{id:x.id,name:x.name,type:type.value}:x))));
       const remove=el('button','text-button','×');remove.disabled=isRunning();remove.setAttribute('aria-label','删除参数'+p.name);remove.addEventListener('click',()=>onChange(updateSignature(getProject(),b.id,params.filter(x=>x.id!==p.id))));row.append(chip,name,type,remove);box.append(row);
     }
     const add=el('button','add-parameter','＋ 添加参数');add.disabled=isRunning();add.addEventListener('click',()=>{const used=new Set(params.map(p=>p.name));let i=params.length+1;while(used.has('参数'+i))i++;const id=block('move').id;onChange(updateSignature(getProject(),b.id,[...params,{id,name:'参数'+i,type:'number'}]));});box.append(add);return box;
@@ -93,7 +93,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     $('palette').replaceChildren();$('categoryName').textContent=CATEGORIES[category]+'积木';document.querySelectorAll('[data-category]').forEach(btn=>btn.classList.toggle('active',btn.dataset.category===category));renderTools();
     for(const [type,d] of Object.entries(TYPES)){
       if(d.category!==category||d.hidden||type==='argument')continue;const controlFrame=category==='control'&&d.container,btn=el('button',`palette-block ${category}${controlFrame?' control-frame':''}${d.reporter?' reporter':''}${d.valueType==='boolean'?' boolean-value':''}`);btn.draggable=!isRunning();btn.disabled=isRunning();btn.dataset.type=type;btn.setAttribute('aria-label',`添加${d.label}${d.reporter?'返回值':'积木'}`);const head=controlFrame?el('span','palette-head'):btn;head.append(document.createTextNode(d.label+' '));
-      for(const spec of Object.values(d.fields)){const sample=isExpression(spec.default)?TYPES[spec.default.type].label:labelOption(spec.default,spec);head.append(el('span','sample-value',String(sample)));}
+      const paletteFields=type==='define'?{name:d.fields.name}:type==='call'?fieldsFor(defaults(type),getProject()):d.fields;for(const [key,spec] of Object.entries(paletteFields)){const sample=key.startsWith('arg:')?spec.label:isExpression(spec.default)?TYPES[spec.default.type].label:labelOption(spec.default,spec);head.append(el('span','sample-value'+(spec.valueType==='boolean'||isBoolean(spec.default,getProject())?' boolean-value':''),String(sample)));}
       if(controlFrame){btn.append(head,el('span','palette-cavity'));if(d.otherwise)btn.append(el('span','palette-else','否则'),el('span','palette-cavity'));btn.append(el('span','control-end'));}
       btn.addEventListener('click',()=>add(type));btn.addEventListener('dragstart',e=>{e.dataTransfer.setData('application/x-block',JSON.stringify({type}));e.dataTransfer.effectAllowed='copy';});$('palette').append(btn);
     }

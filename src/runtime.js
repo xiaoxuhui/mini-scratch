@@ -43,7 +43,7 @@ export function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onErr
       if(b.type==='call'){
         const def=definitions.get(b.name);if(!def)throw new Error('找不到自制积木：'+b.name);
         if(scope.depth>=32)throw new Error('自制积木调用超过 32 层');
-        const parameters=new Map();for(const p of def.parameters||[]){const raw=b.arguments?.find(a=>a.parameterId===p.id)?.value??parameterDefault(p.type),value=evaluate(raw,context(scope));parameters.set(p.id,p.type==='number'?numeric(value):p.type==='boolean'?truth(value):String(value).slice(0,80));}
+        const parameters=new Map();for(const p of def.parameters||[]){const raw=b.arguments?.find(a=>a.parameterId===p.id)?.value??parameterDefault(p.type),value=evaluate(raw,context(scope));parameters.set(p.id,p.legacy?value:p.type==='number'?numeric(value):p.type==='boolean'?truth(value):String(value).slice(0,80));}
         const argument=def.parameters?parameters.values().next().value:val(b,'value',scope);notify(b);await sleep(pace,local);await walk(def.children,{inCall:true,depth:scope.depth+1,argument,parameters,definitionId:def.id});continue;
       }
       let duration=pace;

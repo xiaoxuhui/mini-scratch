@@ -1,7 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {block,expression,createRuntime,validateProject,example} from '../src/core.js';
+import {migrateProcedures} from '../src/procedures.js';
 const fast={pace:0,sleep:async()=>{}};
+test('old untyped string and boolean arguments retain their original value after migration',async()=>{for(const value of ['旧作品文字',true]){const p=example();p.variables=[{name:'结果',value:0}];p.blocks=[block('define',{name:'原样',children:[block('setVar',{name:'结果',value:expression('argument')})]}),block('call',{name:'原样',value})];const r=createRuntime(validateProject(migrateProcedures(p)),fast);await r.start();await r.drain();assert.equal(r.state.variables.get('结果'),value);}});
 test('live state reporters feed arithmetic and numeric procedure arguments, scopes survive nested calls',async()=>{
   const p=example();const a=block('define',{name:'外层',parameters:[{id:'n',name:'步数',type:'number'},{id:'s',name:'文字',type:'string'},{id:'b',name:'通过',type:'boolean'}],children:[]});delete a.parameter;
   const ref=id=>expression('parameter',{definitionId:a.id,parameterId:id});
