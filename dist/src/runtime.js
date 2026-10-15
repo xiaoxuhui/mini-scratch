@@ -1,5 +1,6 @@
 import {TYPES} from './blocks.js';
 import {evaluate,numeric,truth} from './expressions.js';
+import {parameterDefault} from './procedures.js';
 export const initialState=(project={})=>({x:0,y:0,angle:0,speech:'',thought:false,pen:false,lines:[],visible:true,size:100,costume:project.sprite||'fox',backdrop:project.backdrop||'meadow',volume:80,timerStart:0,variables:new Map((project.variables||[]).map(v=>[v.name,v.value]))});
 export function delay(ms,signal){return new Promise((resolve,reject)=>{const abort=()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);reject(new DOMException('已停止','AbortError'));};const timer=setTimeout(()=>{signal?.removeEventListener('abort',abort);resolve();},ms);if(signal?.aborted)abort();else signal?.addEventListener('abort',abort,{once:true});});}
 class StopScript extends Error {}
@@ -13,7 +14,8 @@ export function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onErr
   local.addEventListener('abort',()=>{onSound({kind:'stop'});signal?.removeEventListener('abort',externalAbort);},{once:true});
   const check=()=>{if(local.aborted)throw new DOMException('已停止','AbortError');};
   const tick=()=>{check();if(++steps>10000)throw new Error('执行达到 10000 步，请减少重复次数');};
-  const context=scope=>({state,sensing,clock,random,...scope});
+  const costumes=['fox','rabbit','robot',...(project.assets?.sprites||[]).map(x=>x.id)],backdrops=['meadow','space','paper',...(project.assets?.backdrops||[]).map(x=>x.id)];
+  const context=scope=>({state,sensing,clock,random,costumes,backdrops,...scope});
   const val=(b,key,scope)=>evaluate(b[key],context(scope));
   const num=(b,key,scope)=>{const spec=TYPES[b.type].fields[key];return Math.max(spec.min,Math.min(spec.max,numeric(val(b,key,scope))));};
   const notify=b=>onStep(state,b.id);
@@ -41,7 +43,8 @@ export function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onErr
       if(b.type==='call'){
         const def=definitions.get(b.name);if(!def)throw new Error('找不到自制积木：'+b.name);
         if(scope.depth>=32)throw new Error('自制积木调用超过 32 层');
-        const argument=val(b,'value',scope);notify(b);await sleep(pace,local);await walk(def.children,{inCall:true,depth:scope.depth+1,argument});continue;
+        const parameters=new Map();for(const p of def.parameters||[]){const raw=b.arguments?.find(a=>a.parameterId===p.id)?.value??parameterDefault(p.type),value=evaluate(raw,context(scope));parameters.set(p.id,p.legacy?value:p.type==='number'?numeric(value):p.type==='boolean'?truth(value):String(value).slice(0,80));}
+        const argument=def.parameters?parameters.values().next().value:val(b,'value',scope);notify(b);await sleep(pace,local);await walk(def.children,{inCall:true,depth:scope.depth+1,argument,parameters,definitionId:def.id});continue;
       }
       let duration=pace;
       switch(b.type){
@@ -59,11 +62,12 @@ export function createRuntime(project,{signal,onStep=()=>{},onSound=()=>{},onErr
         case 'show':state.visible=true;break;case 'hide':state.visible=false;break;
         case 'setSize':state.size=num(b,'value',scope);break;
         case 'changeSize':state.size=Math.max(10,Math.min(300,state.size+num(b,'value',scope)));break;
-        case 'nextCostume':{const costumes=['fox','rabbit','robot'];state.costume=costumes[(costumes.indexOf(state.costume)+1)%costumes.length];break;}
+        case 'nextCostume':state.costume=costumes[(costumes.indexOf(state.costume)+1)%costumes.length];break;
         case 'backdrop':state.backdrop=b.value;break;
         case 'setVolume':state.volume=num(b,'value',scope);break;
         case 'changeVolume':state.volume=Math.max(0,Math.min(100,state.volume+num(b,'value',scope)));break;
         case 'stopSound':onSound({kind:'stop'});break;
+        case 'playSound':{const asset=project.assets?.sounds.find(x=>x.id===b.sound);if(!asset)throw new Error('请先录入或选择声音');const seconds=await onSound({kind:'recording',data:asset.data,volume:state.volume});check();duration=(seconds??asset.seconds)*1000;break;}
         case 'note':{const note=num(b,'value',scope),seconds=num(b,'seconds',scope);onSound({kind:'note',frequency:440*2**((note-69)/12),seconds,volume:state.volume});duration=seconds*1000;break;}
         case 'wait':duration=num(b,'value',scope)*1000;break;
         case 'stopScript':throw new StopScript();

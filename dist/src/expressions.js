@@ -10,12 +10,16 @@ export function evaluate(value,context={},depth=0){
   let result;
   switch(value.type){
     case 'xPosition':return state.x||0;case 'yPosition':return state.y||0;case 'direction':return state.angle||0;case 'spriteSize':return state.size??100;
+    case 'volume':return state.volume??80;
+    case 'costumeNumber':return (context.costumes||['fox','rabbit','robot']).indexOf(state.costume)+1;
+    case 'backdropNumber':return (context.backdrops||['meadow','space','paper']).indexOf(state.backdrop)+1;
     case 'mouseX':return sense.mouseX||0;case 'mouseY':return sense.mouseY||0;case 'mouseDown':return !!sense.mouseDown;
     case 'touchingEdge':return Math.abs(state.x||0)>=240||Math.abs(state.y||0)>=180;
     case 'keyPressed':return sense.keys?.has(value.key) || false;
     case 'timer':return Math.max(0,(context.clock?.()||0)-(state.timerStart||0));
     case 'variable':if(!variables.has(value.name))throw new Error('变量不存在：'+value.name);return variables.get(value.name);
     case 'argument':if(!context.inCall)throw new Error('参数积木只能在自制积木调用中使用');return context.argument;
+    case 'parameter':if(!context.inCall||context.definitionId!==value.definitionId||!context.parameters?.has(value.parameterId))throw new Error('参数只能在所属自制积木内使用');return context.parameters.get(value.parameterId);
     case 'add':result=n(value.a)+n(value.b);break;case 'subtract':result=n(value.a)-n(value.b);break;case 'multiply':result=n(value.a)*n(value.b);break;
     case 'divide':{const b=n(value.b);if(b===0)throw new Error('不能除以 0');result=n(value.a)/b;break;}
     case 'mod':{const b=n(value.b);if(b===0)throw new Error('不能对 0 取余');result=((n(value.a)%b)+b)%b;break;}

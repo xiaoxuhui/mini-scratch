@@ -15,7 +15,7 @@
   </header>
   <main>
     <section class="project-heading">
-      <div><div class="eyebrow">YOUR LITTLE CREATIVE SPACE</div><div class="title-row"><input id="projectName" aria-label="作品名称" maxlength="40" value="小狐狸画方形"><span class="edit-name" aria-hidden="true">✎</span><span class="version-badge">v0.2.1 简易版</span></div></div>
+      <div><div class="eyebrow">YOUR LITTLE CREATIVE SPACE</div><div class="title-row"><input id="projectName" aria-label="作品名称" maxlength="40" value="小狐狸画方形"><span class="edit-name" aria-hidden="true">✎</span><span class="version-badge">v0.3.0 简易版</span></div></div>
       <div class="project-actions"><span id="saveStatus" class="save-status">● 已保存到本机</span><button id="newButton" class="button secondary">＋ 新作品</button></div>
     </section>
     <div class="workbench">
@@ -45,6 +45,7 @@
               <g class="meadow-art"><circle cx="400" cy="64" r="27" fill="#fff0b0"/><path d="M0 270Q90 190 200 267T480 240V360H0" fill="#c7ddbb"/><path d="M0 310Q155 230 330 310T480 282V360H0" fill="#a8c69a"/><path d="M55 83h65a16 16 0 0 0-20-20 22 22 0 0 0-42 8 6 6 0 0 0-3 12m232 35h46a12 12 0 0 0-15-15 16 16 0 0 0-31 7 4 4 0 0 0 0 8" fill="#fff" opacity=".8"/></g>
               <g class="space-art" fill="#fff"><circle cx="50" cy="60" r="2"/><circle cx="390" cy="80" r="3"/><circle cx="300" cy="30" r="2"/><circle cx="80" cy="240" r="2"/><circle cx="410" cy="290" r="2"/><circle cx="160" cy="100" r="1.5"/><circle cx="340" cy="190" r="1.5"/><circle cx="350" cy="90" r="24" fill="#9a8acb"/><ellipse cx="350" cy="90" rx="43" ry="9" fill="none" stroke="#c1b2ee" stroke-width="4" transform="rotate(-25 350 90)"/></g>
               <rect width="480" height="360" fill="url(#grid)"/><path class="axes" d="M240 0V360M0 180H480" fill="none" stroke="currentColor" stroke-dasharray="3 6" opacity=".12"/>
+              <image id="customBackdrop" width="480" height="360" preserveAspectRatio="xMidYMid slice" style="display:none"/>
               <g id="drawing" fill="none" stroke="#a16be0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></g>
               <g id="sprite" transform="translate(240 180)" role="button" tabindex="0" aria-label="点击角色触发事件"></g>
             </svg>
@@ -54,9 +55,10 @@
         </div>
         <div class="sprite-panel panel">
           <div class="sprite-info"><div id="spriteThumbnail" class="sprite-thumbnail"></div><div><h2 id="spriteName">小狐狸</h2><span class="small-label">当前角色</span></div><span class="sprite-check">✓</span></div>
-          <div class="coordinates"><div><span>X 坐标</span><strong id="xValue">0</strong></div><div><span>Y 坐标</span><strong id="yValue">0</strong></div><div><span>方向</span><strong id="angleValue">0°</strong></div></div>
+          <div class="coordinates"><div><span>X 坐标</span><strong id="xValue">0</strong></div><div><span>Y 坐标</span><strong id="yValue">0</strong></div><div><span>方向</span><strong id="angleValue">0°</strong></div><div><span>当前大小</span><strong id="sizeValue">100%</strong></div></div>
           <div id="variableMonitor" class="variable-monitor" aria-label="变量运行值"></div>
           <div class="asset-pickers"><label>角色<select id="spriteSelect" aria-label="选择角色"><option value="fox">🦊 小狐狸</option><option value="rabbit">🐰 小兔子</option><option value="robot">🤖 小机器人</option></select></label><label>背景<select id="backdropSelect" aria-label="选择背景"><option value="meadow">🌱 青草地</option><option value="space">🪐 星空</option><option value="paper">▦ 方格纸</option></select></label></div>
+          <div class="custom-assets-actions"><button id="spriteAssets" class="button secondary">✎ 导入 / 绘制角色</button><button id="backdropAssets" class="button secondary">✎ 导入 / 绘制背景</button></div>
         </div>
       </section>
     </div>
@@ -65,7 +67,7 @@
   </main>
   <div id="toast" class="toast" role="status" hidden></div>
   <dialog id="expressionDialog" class="expression-dialog"><button id="closeExpression" class="dialog-close" aria-label="关闭返回值编辑">×</button><div class="eyebrow">VALUES THAT FIT TOGETHER</div><h2>把返回值放进参数</h2><label class="expression-target">放入位置<select id="expressionTarget" aria-label="放入位置"></select></label><div id="expressionTree"></div><p id="expressionPreview" class="expression-preview"></p><div class="expression-footer"><button id="clearExpression" class="button secondary">改回直接输入</button><button id="applyExpression" class="button primary">放入参数 ✓</button></div></dialog>
-  <dialog id="helpDialog"><button id="closeHelp" class="dialog-close" aria-label="关闭指南">×</button><div class="eyebrow">LET'S MAKE SOMETHING</div><h2>让第一个想法动起来</h2><ol><li><strong>选一块积木</strong><p>点击积木添加，或拖到代码区。拖进「重复执行」的内部，就能循环运行。</p></li><li><strong>试着改一改</strong><p>白色框修改参数，◇ 放入运算、检测或变量返回值。变量分类可新建变量；自制积木先定义，再调用，支持一个参数。↑↓ 调整顺序，× 删除，撤销找回编辑。</p></li><li><strong>点击绿色旗子</strong><p>角色从舞台中心开始运行。事件与定义放最外层；按键和点击事件需先点绿旗。试试“积木音乐派对”。红方块停止并停止声音，↺ 复位。方向 0° 朝右，右转 90° 朝下。</p></li></ol><p class="help-note">作品自动保存在当前浏览器。可导出 JSON 留存，或导入继续创作。示例会替换当前程序，可通过「撤销」恢复。</p><button id="startCreating" class="button primary">开始我的创作 ↗</button></dialog>
+  <dialog id="helpDialog"><button id="closeHelp" class="dialog-close" aria-label="关闭指南">×</button><div class="eyebrow">LET'S MAKE SOMETHING</div><h2>让第一个想法动起来</h2><ol><li><strong>选一块积木</strong><p>点击积木添加，或拖到代码区。拖进「重复执行」的内部，就能循环运行。</p></li><li><strong>试着改一改</strong><p>白色框修改参数，◇ 放入运算、检测或变量返回值。变量分类可新建变量；自制积木先定义，再调用，可添加数字、文字、布尔参数；把参数名拖入定义内使用。角色和背景可导入或绘制，声音区可录音或导入音频。↑↓ 调整顺序，× 删除，撤销找回编辑。</p></li><li><strong>点击绿色旗子</strong><p>角色从舞台中心开始运行。事件与定义放最外层；按键和点击事件需先点绿旗。试试“积木音乐派对”。红方块停止并停止声音，↺ 复位。方向 0° 朝右，右转 90° 朝下。</p></li></ol><p class="help-note">作品自动保存在当前浏览器。可导出 JSON 留存，或导入继续创作。示例会替换当前程序，可通过「撤销」恢复。</p><button id="startCreating" class="button primary">开始我的创作 ↗</button></dialog>
   <script type="module" src="./src/app.js"></script>
 </body>
 </html>
