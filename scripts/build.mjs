@@ -1,7 +1,13 @@
-import { mkdir, copyFile, readdir } from 'node:fs/promises';
+import { mkdir, copyFile, readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url);
 await mkdir(new URL('dist/src/', root), { recursive:true });
 await copyFile(new URL('index.html',root),new URL('dist/index.html',root));
 for(const file of await readdir(new URL('src/',root))) await copyFile(new URL('src/'+file,root),new URL('dist/src/'+file,root));
+const html=await readFile(new URL('index.html',root),'utf8');
+const css=await readFile(new URL('src/style.css',root),'utf8');
+const core=await readFile(new URL('src/core.js',root),'utf8');
+const app=(await readFile(new URL('src/app.js',root),'utf8')).replace(/^import .*?;\r?\n/,'');
+const standalone=html.replace('<link rel="stylesheet" href="./src/style.css">',()=>`<style>${css}</style>`).replace('<script type="module" src="./src/app.js"></script>',()=>`<script type="module">\n${core}\n${app}\n</script>`);
+await writeFile(new URL('dist/play.html',root),standalone);
 console.log('Build complete: '+fileURLToPath(new URL('dist/',root)));

@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7555cd"><meta name="description" content="拼一拼积木，让创意动起来。一个轻巧的中文图形编程工作台。">
+  <title>灵感积木 · 创意编程工作台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%237555cd'/%3E%3Cpath d='M10 12h8v-3h7v3h6v8h-3v6h3v5H10v-8h3v-5h-3z' fill='white'/%3E%3C/svg%3E">
+  <style>.add-here{border:0;background:transparent;color:#fff9e4;font-size:9px;padding:8px 0 0;width:100%;text-align:left}.add-root{font-size:10px;border:1px dashed #d8cfe6;border-radius:6px;color:#ac96c4;background:transparent;display:block;width:100%;padding:14px 5px;margin-top:13px}.root-list:after{display:none!important}.asset-pickers label{white-space:nowrap}
+:root{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#34313f;background:#f6f5f1;font-synthesis:none;--purple:#7555cd;--muted:#9a96a2;--border:#e8e5ed;--motion:#508aeb;--looks:#a071d8;--control:#e5a63b;--pen:#46a996}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.4}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c7b4f6;outline-offset:3px}button{transition:background .15s,box-shadow .15s,transform .15s}button:not(:disabled):active{transform:translateY(1px)}button:not(:disabled):hover{filter:brightness(.97)}.topbar{height:67px;background:var(--purple);display:flex;align-items:center;padding:0 34px;gap:24px;color:white}.brand{display:flex;align-items:center;gap:11px;color:inherit;text-decoration:none;white-space:nowrap}.brand-icon{font-size:30px;line-height:1}.brand strong{font-size:21px;letter-spacing:2px}.brand-en{font-size:10px;letter-spacing:1.5px;opacity:.6;margin-left:3px;padding-top:6px}.top-divider{height:20px;width:1px;background:#ffffff30}.top-caption{font-size:12px;color:#e1d9f5;letter-spacing:1px}.top-actions{margin-left:auto;display:flex;gap:8px}.top-button{border:0;background:transparent;color:#fff;padding:8px 11px;font-size:12px}.top-button:hover{background:#ffffff15;border-radius:6px}main{max-width:1600px;padding:30px 34px 0;margin:auto}.project-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:25px}.eyebrow{color:#aaa3b4;letter-spacing:2px;font-size:10px;font-weight:600;margin-bottom:8px}.title-row{display:flex;align-items:center;gap:12px}#projectName{background:transparent;border:0;color:#35303e;font-size:25px;font-weight:650;max-width:330px;width:230px;padding:1px 0}.edit-name{color:#aaa3b4;font-size:20px}.version-badge{color:#a49ba9;font-size:10px;border:1px solid #ded9e1;border-radius:5px;padding:3px 7px;white-space:nowrap}.project-actions{display:flex;gap:20px;align-items:center}.save-status{font-size:11px;color:#9b96a3}.button{border-radius:7px;padding:10px 17px;font-size:12px;font-weight:600}.secondary{border:1px solid #ded9e5;background:#fff;color:#665d76}.primary{background:var(--purple);color:white;border:0}.workbench{display:grid;grid-template-columns:242px minmax(310px,1fr) minmax(365px,480px);gap:17px;align-items:start}.panel{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 3px 8px #30233c03;overflow:hidden}.panel-heading{height:57px;display:flex;align-items:center;justify-content:space-between;padding:0 17px;border-bottom:1px solid var(--border)}h2{font-size:14px;font-weight:650;margin:0}.small-label{font-size:10px;color:var(--muted)}.library,.editor{height:608px}.categories{padding:17px 12px 15px;display:grid;grid-template-columns:1fr 1fr;gap:7px;border-bottom:1px solid #f1eef4}.category{border:1px solid transparent;background:#fff;color:#817a8a;border-radius:7px;padding:10px;font-size:12px;display:flex;align-items:center;gap:9px}.category.active{background:#eff4ff;border-color:#e3ebfe;color:#477ad3;font-weight:600}.dot{width:9px;height:9px;border-radius:50%;display:inline-block}.motion{background:var(--motion)}.looks{background:var(--looks)}.control{background:var(--control)}.pen{background:var(--pen)}.palette-heading{display:flex;justify-content:space-between;padding:20px 19px 12px;font-size:11px;color:#a19aa9}.palette{display:flex;align-items:flex-start;gap:16px;flex-direction:column;padding:6px 18px;min-height:180px}.palette-block{color:white;border:1px solid #00000010;border-radius:5px;position:relative;padding:11px 12px;font-size:12px;box-shadow:0 2px 0 #00000015;text-align:left;cursor:grab}.palette-block:before,.code-block>.block-row:before{content:"";position:absolute;top:-1px;left:19px;width:24px;height:5px;background:white;border-radius:0 0 4px 4px;opacity:.8}.palette-block:after,.code-block:after{content:"";position:absolute;bottom:-5px;left:20px;width:22px;height:6px;border-radius:0 0 4px 4px;background:inherit;z-index:1}.sample-value{display:inline-block;border-radius:11px;padding:3px 9px;background:#ffffffeb;color:#5c6f8e;margin:0 4px;min-width:28px;text-align:center}.library-tip{display:flex;gap:10px;margin:34px 18px 0;padding-top:21px;border-top:1px dashed var(--border);color:#aaa3b1;font-size:11px;line-height:1.95}.library-tip p{margin:0}.tip-symbol{font-size:25px;color:#c5b7de}.mini-legend{display:flex;justify-content:center;gap:9px;color:#b5acbf;font-size:9px;margin-top:26px}.editor{display:flex;flex-direction:column}.editor-tabs{display:flex;gap:23px;height:100%;align-items:center}.editor-tabs>span{font-size:10px;color:#b2aab9}.selected-tab{color:var(--purple);border-bottom:3px solid var(--purple);height:100%;display:flex;align-items:center;padding:0 3px}.count-badge{font-size:10px;color:#aba3b3;background:#f6f4f9;border-radius:5px;padding:5px 7px}.editor-toolbar{height:43px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 19px;color:#a7a0ae;font-size:10px;border-bottom:1px solid #eeebf1}.editor-toolbar>span{display:flex;gap:7px;align-items:center}.live-dot{background:#9fc4ac;height:5px;width:5px;border-radius:50%}.text-button{border:0;background:transparent;color:#a69dad;font-size:10px;padding:6px}.script-scroll{padding:28px 22px;overflow:auto;flex:1;background-color:#fcfbfe;background-image:radial-gradient(#ddd7e8 .8px,transparent .8px);background-size:18px 18px}.event-block{background:#eab447;color:#fff;border:1px solid #dba635;border-radius:18px 18px 5px 5px;width:max-content;max-width:100%;padding:12px 20px 9px 13px;font-size:12px;font-weight:600;position:relative;box-shadow:0 2px 0 #d99f31;margin-bottom:4px}.event-block:after{content:"";position:absolute;bottom:-5px;left:20px;width:22px;height:7px;background:inherit;border-radius:0 0 4px 4px;z-index:2}.event-block>span{color:#fff9c7;font-size:22px;vertical-align:middle;margin-right:4px}.block-list{min-height:44px;position:relative;padding-top:0}.code-block{position:relative;margin:0 0 4px;border-radius:5px;box-shadow:0 2px 0 #00000015;max-width:100%;border:1px solid #0000000d}.block-row{display:flex;align-items:center;position:relative;min-height:41px;padding:7px 8px 7px 12px;gap:5px;color:white;font-size:12px;flex-wrap:wrap}.grip{opacity:.5;margin-right:3px;cursor:grab;font-size:12px}.block-row input{font-size:11px;border:1px solid #ffffff55;border-radius:12px;padding:3px 6px;background:#fffffff0;color:#596279;width:48px;text-align:center;min-width:0}.block-row input[type=text]{width:160px;flex:1;max-width:200px}.block-actions{display:flex;gap:1px;margin-left:auto;opacity:.65}.block-actions button{font-size:12px;line-height:20px;padding:0 4px;border:0;border-radius:3px;background:transparent;color:#fff}.block-actions button:hover{background:#ffffff33}.repeat-body{padding:0 8px 9px 16px}.repeat-body>.block-list{background:#fcfbfe;border-radius:4px;min-height:43px;padding:5px 0 2px 6px}.repeat-end{height:8px}.empty-drop{font-size:10px;color:#b5a9c2;display:flex;align-items:center;justify-content:center;padding:14px 7px;min-height:44px;pointer-events:none}.root-list{padding-bottom:14px}.root-list:after{content:"＋ 拖一块积木到这里";font-size:10px;border:1px dashed #d8cfe6;border-radius:6px;color:#b2a1c7;display:block;padding:14px 8px;text-align:center;margin-top:13px}.root-list>.empty-drop{display:none}.block-list.drag-over{outline:2px dashed var(--purple);outline-offset:3px;background-color:#ece5fc!important}.code-block.executing{outline:3px solid #ffd76c;outline-offset:1px;box-shadow:0 0 17px #f9cb6480;z-index:2}.editor-hint{color:#b8aebf;font-size:10px;padding:17px 0;text-align:center}.editor-bottom{height:39px;padding:0 17px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-top:1px solid var(--border);font-size:10px;color:#aaa0b4}.preview-column{display:flex;flex-direction:column;gap:14px}.stage-toolbar{height:57px;padding:0 15px;display:flex;align-items:center;justify-content:space-between}.stage-title{display:flex;align-items:center;gap:10px}.stage-label{font-size:13px;font-weight:650}.stage-size{font-size:9px;color:#b2aaba}.run-controls{display:flex;gap:7px;align-items:center}.run-button{border:1px solid #d5eade;background:#edf7ef;border-radius:6px;color:#5b9b70;font-size:11px;padding:6px 10px;display:flex;gap:5px;align-items:center}.run-button span{font-size:21px;line-height:20px}.stop-button{border:1px solid #f3dddd;border-radius:6px;background:#fdf4f3;color:#d9817b;width:31px;height:32px}.control-divider{width:1px;height:18px;background:var(--border);margin:0 2px}.icon-button{border:0;background:transparent;font-size:23px;color:#9a92a5;padding:1px 5px}.stage{aspect-ratio:4/3;position:relative;overflow:hidden;color:#61867a}.stage svg{display:block;width:100%;height:100%}.stage.meadow{background:#e9f2e5}.stage.space{background:#292b4c;color:#e9dfff}.stage.paper{background:#faf8f1;color:#a18db5}.stage:not(.meadow) .meadow-art,.stage:not(.space) .space-art{display:none}#sprite{transition:transform .16s ease-out}.stage-origin{position:absolute;bottom:12px;left:14px;font:9px monospace;color:currentColor;opacity:.55}.stage-badge{position:absolute;bottom:10px;right:12px;background:#ffffff6b;border:1px solid #ffffff50;border-radius:12px;padding:4px 9px;font-size:9px;color:#6d8772}.space .stage-badge{color:#efddff;background:#ffffff15}.speech{position:absolute;background:#fff;border:1px solid #e1dbe7;padding:9px 12px;border-radius:13px 13px 13px 3px;font-size:11px;max-width:175px;overflow-wrap:anywhere;box-shadow:0 3px 12px #3d30400a;color:#61576f;transform:translate(-12%,-100%);pointer-events:none}.stage-footer{height:36px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;font-size:9px;color:#a49aa9}.keyboard-hint{color:#beb5c3}.sprite-panel{padding:17px 17px 15px}.sprite-info{display:flex;align-items:center;gap:11px}.sprite-thumbnail{width:44px;height:44px;border-radius:10px;background:#fff2e6;border:1px solid #f4e5d8;display:grid;place-items:center}.sprite-thumbnail svg{width:38px;height:38px}.sprite-info h2{font-size:12px;margin-bottom:3px}.sprite-check{color:var(--purple);background:#f1ebfc;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;margin-left:auto;font-size:11px}.coordinates{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0 14px}.coordinates>div{display:flex;align-items:center;justify-content:space-between;gap:5px;border:1px solid #ece8f0;padding:8px 9px;border-radius:6px;font-size:10px}.coordinates span{color:#aaa1b3}.coordinates strong{font-size:11px;font-weight:500;color:#6d617c;font-variant-numeric:tabular-nums}.asset-pickers{display:flex;gap:13px;border-top:1px solid #f0edf4;padding-top:13px}.asset-pickers label{font-size:10px;color:#a79cac;display:flex;gap:8px;align-items:center;flex:1}.asset-pickers select{width:100%;min-width:0;font-size:10px;border:0;background:#f8f6fb;border-radius:5px;padding:7px 5px;color:#7e728e}.examples{display:grid;grid-template-columns:1.1fr repeat(3,1fr);gap:16px;margin-top:25px;align-items:center}.examples-intro{display:flex;align-items:center;gap:13px}.example-spark{color:#a18ac7;font-size:33px}.examples-intro h2{font-size:13px;color:#756782}.examples-intro p{font-size:10px;color:#ada3b6;margin:7px 0 0}.example-card{display:flex;align-items:center;gap:14px;text-align:left;padding:16px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;min-width:0}.example-card:hover{box-shadow:0 5px 15px #7555cd10;border-color:#c8b7e6}.example-art{width:42px;height:42px;border-radius:10px;font-size:31px;display:grid;place-items:center;flex-shrink:0}.square-art{background:#edf3ff;color:#81a3e4}.flower-art{background:#f5eefe;color:#b18ad8}.hello-art{background:#fff3e8;color:#dea778}.example-card strong{font-size:11px;font-weight:600;color:#7a6e88;display:block}.example-card small{font-size:9px;color:#b1a8ba;display:block;margin-top:7px}.example-arrow{margin-left:auto;color:#bab0c5;font-size:18px}.page-footer{display:flex;justify-content:space-between;color:#bab2c2;font-size:9px;padding:22px 2px 18px;letter-spacing:.5px}.toast{position:fixed;bottom:27px;left:50%;transform:translateX(-50%);background:#45384f;color:white;border-radius:9px;padding:13px 21px;font-size:12px;box-shadow:0 6px 25px #0002;z-index:100;max-width:90vw;text-align:center}dialog{border:1px solid #e8e0f2;border-radius:18px;max-width:440px;width:calc(100% - 32px);padding:32px;color:#554762;box-shadow:0 20px 80px #33234430}dialog::backdrop{background:#35233e55;backdrop-filter:blur(3px)}dialog h2{font-size:22px;margin:12px 0 25px}dialog ol{padding-left:23px;font-size:13px}dialog li{padding-left:7px;margin:20px 0}dialog p{font-size:12px;line-height:1.8;color:#9c90a8;margin:5px 0}.help-note{border-top:1px solid var(--border);padding-top:16px;margin-bottom:22px!important}.dialog-close{position:absolute;right:15px;top:12px;border:0;background:transparent;color:#a093ae;font-size:25px}.running .live-dot{background:#eab447}.running .script-scroll{cursor:wait}.running .block-actions,.running .palette-block{pointer-events:none}.running .stage-footer{color:#8864c4}@media(min-width:1450px){.library,.editor{height:650px}.workbench{grid-template-columns:260px minmax(350px,1fr) minmax(400px,520px)}}@media(max-width:1150px){.top-caption,.brand-en{display:none}main{padding:24px 20px 0}.topbar{padding:0 22px}.workbench{grid-template-columns:192px minmax(290px,1fr) minmax(310px,.95fr);gap:12px}.palette{padding:6px 12px}.panel-heading{padding:0 13px}.small-label{font-size:9px}.editor-tabs{gap:12px}.editor-tabs>span{display:none}.script-scroll{padding:25px 14px}.block-row{font-size:11px}.examples{gap:10px;grid-template-columns:1fr 1fr 1fr}.examples-intro{grid-column:1/-1;margin:0 0 2px}.library,.editor{height:590px}.coordinates>div{padding:7px 5px}.stage-size{display:none}}@media(max-width:900px){.workbench{grid-template-columns:180px 1fr}.preview-column{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:1.4fr 1fr;align-items:start}.stage-panel{max-width:480px}.sprite-panel{margin-top:0}.library,.editor{height:560px}.project-heading{gap:12px}.save-status{display:none}.examples{grid-template-columns:repeat(3,1fr)}.example-card{padding:12px;gap:9px}.example-art{width:30px;height:30px;font-size:24px}.example-arrow{display:none}}@media(max-width:600px){.topbar{height:58px;padding:0 15px;gap:8px}.brand strong{font-size:17px;letter-spacing:1px}.brand-icon{font-size:25px}.top-divider{display:none}.top-actions{gap:0}.top-button{padding:8px;font-size:17px}.top-button span{display:none}main{padding:21px 12px 0}.project-heading{margin-bottom:18px}.eyebrow{font-size:8px;letter-spacing:1.4px}#projectName{font-size:20px;width:180px;max-width:49vw}.edit-name{display:none}.title-row{gap:6px}.version-badge{font-size:8px;padding:2px 5px}.project-actions{gap:0}.button{font-size:11px;padding:9px 10px}.preview-column{display:flex;gap:10px}.stage-panel{max-width:none;width:100%}.sprite-panel{width:100%;padding:12px}.sprite-info{float:left;width:110px;height:42px}.sprite-info .sprite-check{display:none}.sprite-thumbnail{width:34px;height:34px}.sprite-thumbnail svg{width:30px;height:30px}.sprite-info h2{font-size:11px}.coordinates{margin:3px 0 12px 118px;gap:4px;min-height:35px}.coordinates>div{padding:5px;font-size:8px;flex-direction:column;gap:2px;justify-content:center}.coordinates strong{font-size:10px}.asset-pickers{clear:both}.workbench{grid-template-columns:112px minmax(0,1fr);gap:9px}.panel-heading{height:49px;padding:0 10px}.panel-heading .small-label{display:none}.categories{padding:10px 5px;gap:2px}.category{padding:8px 4px;font-size:10px;gap:5px}.dot{width:6px;height:6px}.palette-heading{padding:14px 10px 10px;font-size:10px}.palette{padding:5px 7px;gap:15px;min-height:175px}.palette-block{font-size:10px;padding:10px 6px;max-width:100%}.sample-value{padding:2px 5px;margin:0 2px}.library-tip{margin:20px 10px 0;gap:0;font-size:9px;line-height:1.9}.tip-symbol{display:none}.mini-legend{flex-direction:column;align-items:center;margin-top:17px;gap:6px}.editor-toolbar{padding:0 9px;font-size:9px}.count-badge{font-size:9px;padding:4px}.editor-tabs h2{font-size:12px}.script-scroll{padding:23px 9px}.block-row{padding:8px 5px;gap:3px;font-size:10px}.grip{display:none}.block-row input{width:36px;font-size:10px;padding:3px}.block-row input[type=text]{min-width:50px;width:85px}.block-actions{width:100%;justify-content:flex-end;margin-top:1px}.block-actions button{padding:0 6px;line-height:24px}.repeat-body{padding-left:9px;padding-right:4px}.repeat-body>.block-list{padding-left:4px}.editor-bottom{padding:0 9px;font-size:8px}.editor-bottom>span{max-width:120px}.event-block{padding:9px;font-size:10px}.event-block>span{font-size:17px}.editor-hint{font-size:9px}.root-list:after{font-size:9px}.examples{grid-template-columns:1fr;gap:8px;margin-top:21px}.examples-intro{margin-bottom:4px}.example-card{padding:11px 14px}.example-art{width:36px;height:36px;font-size:28px}.example-card small{margin-top:4px}.example-arrow{display:block}.page-footer{gap:10px;font-size:8px;line-height:1.8}.page-footer span:last-child{max-width:130px;text-align:right}.library,.editor{height:620px}.stage-footer{font-size:9px}.keyboard-hint{display:none}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="灵感积木首页"><span class="brand-icon">✦</span><strong>灵感积木</strong><span class="brand-en">BLOCK LAB</span></a>
+    <span class="top-divider"></span><span class="top-caption">小小积木，大大想象</span>
+    <div class="top-actions"><button id="helpButton" class="top-button">? <span>使用指南</span></button><button id="exportButton" class="top-button">↓ <span>导出作品</span></button><button id="importButton" class="top-button">↑ <span>导入</span></button><input id="fileInput" type="file" accept=".json,application/json" hidden></div>
+  </header>
+  <main>
+    <section class="project-heading">
+      <div><div class="eyebrow">YOUR LITTLE CREATIVE SPACE</div><div class="title-row"><input id="projectName" aria-label="作品名称" maxlength="40" value="小狐狸画方形"><span class="edit-name" aria-hidden="true">✎</span><span class="version-badge">简易版</span></div></div>
+      <div class="project-actions"><span id="saveStatus" class="save-status">● 已保存到本机</span><button id="newButton" class="button secondary">＋ 新作品</button></div>
+    </section>
+    <div class="workbench">
+      <aside class="library panel">
+        <div class="panel-heading"><h2>积木盒</h2><span class="small-label">拖一块，试试看</span></div>
+        <nav class="categories" aria-label="积木分类">
+          <button data-category="motion" class="category active"><i class="dot motion"></i>运动</button><button data-category="looks" class="category"><i class="dot looks"></i>外观</button><button data-category="control" class="category"><i class="dot control"></i>控制</button><button data-category="pen" class="category"><i class="dot pen"></i>画笔</button>
+        </nav>
+        <div class="palette-heading"><span id="categoryName">运动积木</span><span id="categoryIcon">↗</span></div>
+        <div id="palette" class="palette"></div>
+        <div class="library-tip"><span class="tip-symbol">✧</span><p>拖到右边，或点击添加。<br>修改白色框里的数值，<br>看看会有什么变化。</p></div>
+        <div class="mini-legend"><span>① 选积木</span><span>② 拼起来</span><span>③ 点绿旗</span></div>
+      </aside>
+      <section class="editor panel">
+        <div class="panel-heading"><div class="editor-tabs"><h2 class="selected-tab">⌘ 代码</h2><span>把想法拼出来</span></div><span id="blockCount" class="count-badge">0 块积木</span></div>
+        <div class="editor-toolbar"><span><i class="live-dot"></i><span id="runStatus" role="status">准备好开始创作</span></span><button id="clearButton" class="text-button">清空积木</button></div>
+        <div class="script-scroll"><div class="event-block"><span>⚑</span> 当绿旗被点击</div><div id="script" class="block-list root-list" data-target="root"></div><div class="editor-hint">积木会从上到下依次执行</div></div>
+        <div class="editor-bottom"><span>✥ 拖入积木 · ↑↓ 调整顺序</span><button id="undoButton" class="text-button" disabled>↶ 撤销</button></div>
+      </section>
+      <section class="preview-column">
+        <div class="stage-panel panel">
+          <div class="stage-toolbar"><div class="stage-title"><span class="stage-label">舞台</span><span class="stage-size">480 × 360</span></div><div class="run-controls"><button id="runButton" class="run-button" aria-label="运行作品"><span>⚑</span> 运行</button><button id="stopButton" class="stop-button" aria-label="停止执行" disabled><span>■</span></button><span class="control-divider"></span><button id="resetButton" class="icon-button" aria-label="舞台复位" title="舞台复位">↺</button></div></div>
+          <div id="stage" class="stage meadow">
+            <svg id="stageSvg" viewBox="0 0 480 360" role="img" aria-label="角色舞台与绘画结果">
+              <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="0.8" fill="currentColor" opacity=".14"/></pattern></defs>
+              <g class="meadow-art"><circle cx="400" cy="64" r="27" fill="#fff0b0"/><path d="M0 270Q90 190 200 267T480 240V360H0" fill="#c7ddbb"/><path d="M0 310Q155 230 330 310T480 282V360H0" fill="#a8c69a"/><path d="M55 83h65a16 16 0 0 0-20-20 22 22 0 0 0-42 8 6 6 0 0 0-3 12m232 35h46a12 12 0 0 0-15-15 16 16 0 0 0-31 7 4 4 0 0 0 0 8" fill="#fff" opacity=".8"/></g>
+              <g class="space-art" fill="#fff"><circle cx="50" cy="60" r="2"/><circle cx="390" cy="80" r="3"/><circle cx="300" cy="30" r="2"/><circle cx="80" cy="240" r="2"/><circle cx="410" cy="290" r="2"/><circle cx="160" cy="100" r="1.5"/><circle cx="340" cy="190" r="1.5"/><circle cx="350" cy="90" r="24" fill="#9a8acb"/><ellipse cx="350" cy="90" rx="43" ry="9" fill="none" stroke="#c1b2ee" stroke-width="4" transform="rotate(-25 350 90)"/></g>
+              <rect width="480" height="360" fill="url(#grid)"/><path class="axes" d="M240 0V360M0 180H480" fill="none" stroke="currentColor" stroke-dasharray="3 6" opacity=".12"/>
+              <g id="drawing" fill="none" stroke="#a16be0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></g>
+              <g id="sprite" transform="translate(240 180)"></g>
+            </svg>
+            <div id="speech" class="speech" hidden></div><div class="stage-origin">x → &nbsp; y ↑</div><span id="stageBadge" class="stage-badge">青草地</span>
+          </div>
+          <div class="stage-footer"><span id="stageMessage">你的创意，即将在这里发生</span><span class="keyboard-hint">绿旗启动 →</span></div>
+        </div>
+        <div class="sprite-panel panel">
+          <div class="sprite-info"><div id="spriteThumbnail" class="sprite-thumbnail"></div><div><h2 id="spriteName">小狐狸</h2><span class="small-label">当前角色</span></div><span class="sprite-check">✓</span></div>
+          <div class="coordinates"><div><span>X 坐标</span><strong id="xValue">0</strong></div><div><span>Y 坐标</span><strong id="yValue">0</strong></div><div><span>方向</span><strong id="angleValue">0°</strong></div></div>
+          <div class="asset-pickers"><label>角色<select id="spriteSelect" aria-label="选择角色"><option value="fox">🦊 小狐狸</option><option value="rabbit">🐰 小兔子</option><option value="robot">🤖 小机器人</option></select></label><label>背景<select id="backdropSelect" aria-label="选择背景"><option value="meadow">🌱 青草地</option><option value="space">🪐 星空</option><option value="paper">▦ 方格纸</option></select></label></div>
+        </div>
+      </section>
+    </div>
+    <section class="examples"><div class="examples-intro"><span class="example-spark">✦</span><div><h2>从一个小灵感开始</h2><p>载入示例，改一改，变成你的作品</p></div></div><button class="example-card" data-example="square"><span class="example-art square-art">□</span><span><strong>画个正方形</strong><small>认识循环的魔法</small></span><span class="example-arrow">↗</span></button><button class="example-card" data-example="flower"><span class="example-art flower-art">❋</span><span><strong>绽放的几何花</strong><small>让重复遇见重复</small></span><span class="example-arrow">↗</span></button><button class="example-card" data-example="hello"><span class="example-art hello-art">☏</span><span><strong>跟世界打招呼</strong><small>让角色动起来</small></span><span class="example-arrow">↗</span></button></section>
+    <footer class="page-footer"><span>每一个大创意，都从一小块开始。</span><span>本地创作 · 自动保存 · 尽情探索</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="helpDialog"><button id="closeHelp" class="dialog-close" aria-label="关闭指南">×</button><div class="eyebrow">LET'S MAKE SOMETHING</div><h2>让第一个想法动起来</h2><ol><li><strong>选一块积木</strong><p>点击积木添加，或拖到代码区。拖进「重复执行」的内部，就能循环运行。</p></li><li><strong>试着改一改</strong><p>白色框可以修改参数；用 ↑↓ 调整同层顺序，× 删除，撤销可找回刚才的编辑。</p></li><li><strong>点击绿色旗子</strong><p>角色会从舞台中心开始运行。红色方块停止，↺ 让舞台复位。方向 0° 朝右，右转 90° 朝下。</p></li></ol><p class="help-note">作品自动保存在当前浏览器。可导出 JSON 留存，或导入继续创作。示例会替换当前程序，可通过「撤销」恢复。</p><button id="startCreating" class="button primary">开始我的创作 ↗</button></dialog>
+  <script type="module">
+export const TYPES = {
+  move: { category: 'motion', label: '移动', value: 60, min: -480, max: 480, unit: '步' },
+  turn: { category: 'motion', label: '右转', value: 90, min: -360, max: 360, unit: '度' },
+  goto: { category: 'motion', label: '移到', x: 0, y: 0 },
+  say: { category: 'looks', label: '说', value: '你好，世界！' },
+  wait: { category: 'control', label: '等待', value: 0.5, min: 0, max: 10, unit: '秒' },
+  repeat: { category: 'control', label: '重复执行', value: 4, min: 0, max: 100, unit: '次' },
+  penDown: { category: 'pen', label: '落笔' },
+  penUp: { category: 'pen', label: '抬笔' },
+  clear: { category: 'pen', label: '清除画迹' }
+};
+let sequence = 0;
+export const uid = () => `b${Date.now().toString(36)}-${++sequence}`;
+export function block(type, overrides = {}) {
+  const d = TYPES[type];
+  if (!d) throw new Error('未知积木');
+  return { id: uid(), type, ...('value' in d ? { value: d.value } : {}), ...(type === 'goto' ? { x: 0, y: 0 } : {}), ...(type === 'repeat' ? { children: [] } : {}), ...overrides };
+}
+const finite = (v, min, max) => {
+  if (v === '' || v == null || typeof v === 'boolean' || !Number.isFinite(Number(v))) throw new Error('积木参数必须是有效数字');
+  return Math.max(min, Math.min(max, Number(v)));
+};
+export function validateProject(raw) {
+  if (!raw || raw.version !== 1 || !Array.isArray(raw.blocks)) throw new Error('项目格式不正确，请选择灵感积木 JSON 文件');
+  let total = 0;
+  const ids = new Set();
+  const parse = (items, depth) => {
+    if (!Array.isArray(items) || depth > 8) throw new Error('积木嵌套最多 8 层');
+    return items.map(item => {
+      if (++total > 300) throw new Error('最多使用 300 块积木');
+      if (!item || !Object.hasOwn(TYPES, item.type)) throw new Error('包含未知积木');
+      const d = TYPES[item.type];
+      const id = typeof item.id === 'string' && item.id.length < 100 && !ids.has(item.id) ? item.id : uid();
+      ids.add(id);
+      const b = { id, type: item.type };
+      if (item.type === 'say') b.value = String(item.value ?? '').slice(0, 80);
+      else if ('value' in d) b.value = finite(item.value, d.min, d.max);
+      if (item.type === 'repeat') { b.value = Math.floor(b.value); b.children = parse(item.children, depth + 1); }
+      if (item.type === 'goto') { b.x = finite(item.x, -240, 240); b.y = finite(item.y, -180, 180); }
+      return b;
+    });
+  };
+  return { version: 1, name: String(raw.name || '我的新作品').slice(0, 40), sprite: ['fox','rabbit','robot'].includes(raw.sprite) ? raw.sprite : 'fox', backdrop: ['meadow','space','paper'].includes(raw.backdrop) ? raw.backdrop : 'meadow', blocks: parse(raw.blocks, 0) };
+}
+export function editTree(blocks, id, action) {
+  return blocks.flatMap((b, index) => {
+    if (b.id === id) return action(b, index) ?? [];
+    return { ...b, ...(b.children ? { children: editTree(b.children, id, action) } : {}) };
+  });
+}
+export function moveInTree(blocks, id, direction) {
+  const out = [...blocks];
+  const i = out.findIndex(b => b.id === id);
+  if (i >= 0) {
+    const j = i + direction;
+    if (j >= 0 && j < out.length) [out[i], out[j]] = [out[j], out[i]];
+    return out;
+  }
+  return out.map(b => b.children ? { ...b, children: moveInTree(b.children, id, direction) } : b);
+}
+export function countBlocks(blocks) { return blocks.reduce((n,b) => n + 1 + (b.children ? countBlocks(b.children) : 0), 0); }
+export const initialState = () => ({ x: 0, y: 0, angle: 0, speech: '', pen: false, lines: [] });
+export function delay(ms, signal) {
+  return new Promise((resolve,reject) => {
+    const abort = () => { clearTimeout(timer); signal?.removeEventListener('abort', abort); reject(new DOMException('已停止', 'AbortError')); };
+    const timer = setTimeout(() => { signal?.removeEventListener('abort', abort); resolve(); }, ms);
+    if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, { once: true });
+  });
+}
+export async function execute(blocks, { signal, onStep = () => {}, sleep = delay, pace = 180 } = {}) {
+  const state = initialState();
+  let steps = 0;
+  const check = () => { if (signal?.aborted) throw new DOMException('已停止', 'AbortError'); };
+  const walk = async items => {
+    for (const b of items) {
+      check();
+      if (++steps > 10000) throw new Error('执行达到 10000 步，请减少重复次数');
+      if (b.type === 'repeat') {
+        onStep(state, b.id); await sleep(pace, signal);
+        for (let i=0; i<b.value; i++) { check(); await walk(b.children); await sleep(0,signal); }
+        continue;
+      }
+      const old = { x: state.x, y: state.y };
+      switch (b.type) {
+        case 'move': state.x += Math.cos(state.angle * Math.PI / 180) * b.value; state.y -= Math.sin(state.angle * Math.PI / 180) * b.value; break;
+        case 'turn': state.angle = ((state.angle + b.value) % 360 + 360) % 360; break;
+        case 'goto': state.x = b.x; state.y = b.y; break;
+        case 'say': state.speech = b.value; break;
+        case 'penDown': state.pen = true; break;
+        case 'penUp': state.pen = false; break;
+        case 'clear': state.lines = []; break;
+      }
+      state.x = Math.max(-240,Math.min(240,state.x)); state.y = Math.max(-180,Math.min(180,state.y));
+      if (state.pen && (b.type === 'move' || b.type === 'goto')) state.lines.push({ x1: old.x,y1: old.y,x2: state.x,y2: state.y });
+      onStep(state, b.id);
+      await sleep(b.type === 'wait' ? b.value * 1000 : pace, signal);
+    }
+  };
+  await walk(blocks); check(); return state;
+}
+export function example(key = 'square') {
+  const square = [block('say',{value:'一起画一个正方形吧！'}), block('penDown'), block('repeat',{value:4,children:[block('move',{value:100}),block('turn',{value:90})]}),block('penUp'),block('say',{value:'完成啦！你也来试试 ✨'})];
+  const flower = [block('penDown'),block('repeat',{value:12,children:[block('repeat',{value:4,children:[block('move',{value:70}),block('turn',{value:90})]}),block('turn',{value:30})]}),block('penUp'),block('say',{value:'送你一朵几何花！'})];
+  const hello = [block('say',{value:'嗨！我是小狐狸 🦊'}),block('wait'),block('move',{value:80}),block('turn',{value:180}),block('move',{value:160}),block('say',{value:'积木让想法动起来！'})];
+  return { version:1,name:{square:'小狐狸画方形',flower:'绽放的几何花',hello:'小狐狸打招呼'}[key] || '小狐狸画方形',sprite:'fox',backdrop:'meadow',blocks:({square,flower,hello}[key] || square) };
+}
+
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const STORAGE = 'inspiration-blocks-v1';
+const categories = { motion:'运动', looks:'外观', control:'控制', pen:'画笔' };
+const names = { fox:'小狐狸',rabbit:'小兔子',robot:'小机器人' };
+const backdrops = { meadow:'青草地',space:'星空',paper:'方格纸' };
+const history = [];
+let project = example(), state = initialState(), category = 'motion', controller = null, toastTimer, bootMessage = '', insertionTarget = 'root';
+try { const saved = localStorage.getItem(STORAGE); if (saved) project = validateProject(JSON.parse(saved)); }
+catch { bootMessage = '本机存档无法读取，已载入示例。可导入备份作品。'; }
+const spriteArt = {
+  fox:'<path d="M-10 12C-47 19-43-18-32-23q-2 22 24 18" fill="#e8843d"/><path d="M-32-23q-4 14 3 22l-10-3q-8-14 7-19" fill="#fff4df"/><ellipse cx="-2" cy="7" rx="21" ry="14" fill="#ed9349"/><path d="M-12 16v8h8l2-9M9 16v8h8l-1-11" fill="#88533e"/><path d="M4-8L7-33l14 13 12-9-1 29q-5 18-20 15L1 3Z" fill="#ed9349"/><path d="M10-27l8 10-9 0m17-5l3-1-1 10" fill="#8f5949"/><path d="M5-1q8 1 13 7L32-3l-2 12q-11 15-21 1Z" fill="#fff5e3"/><ellipse cx="24" cy="-5" rx="2.3" ry="3" fill="#473c40"/><path d="m31 0 6 2-5 4Z" fill="#473c40"/><path d="M19 8q3 4 6 0" stroke="#b87a58" stroke-width="1.4" fill="none"/>',
+  rabbit:'<ellipse cx="-2" cy="9" rx="21" ry="17" fill="#f5ecf4"/><circle cx="-23" cy="8" r="8" fill="#fff"/><ellipse cx="10" cy="-26" rx="7" ry="22" fill="#f5ecf4" transform="rotate(-10 10 -26)"/><ellipse cx="24" cy="-23" rx="7" ry="23" fill="#f5ecf4" transform="rotate(17 24 -23)"/><path d="M10-40v22m17-22-5 22" stroke="#e8b8d2" stroke-width="5" stroke-linecap="round"/><circle cx="15" cy="-3" r="19" fill="#fff6fb"/><circle cx="21" cy="-7" r="2.5" fill="#554656"/><ellipse cx="33" cy="0" rx="3" ry="2.5" fill="#d58ba8"/><path d="M-13 21h14m6 0h15" stroke="#d0bdcf" stroke-width="6" stroke-linecap="round"/><circle cx="20" cy="3" r="4" fill="#f4ccdf"/>',
+  robot:'<path d="M0-28v-8" stroke="#6d79a6" stroke-width="3"/><circle cx="0" cy="-38" r="4" fill="#dca95a"/><rect x="-22" y="-27" width="44" height="33" rx="9" fill="#a2badb"/><rect x="-16" y="-20" width="32" height="18" rx="5" fill="#425771"/><circle cx="-8" cy="-12" r="3" fill="#a3e7dc"/><circle cx="8" cy="-12" r="3" fill="#a3e7dc"/><rect x="-17" y="7" width="34" height="22" rx="7" fill="#adc7df"/><path d="M-24 10v13m48-13v13M-9 29v8m18-8v8" stroke="#7895b9" stroke-width="7" stroke-linecap="round"/><circle cx="0" cy="17" r="5" fill="#f1ce7f"/>'
+};
+function element(tag, className, text) { const el = document.createElement(tag); if(className)el.className=className;if(text!==undefined)el.textContent=text;return el; }
+function toast(message) { clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,3500); }
+function save() {
+  try { localStorage.setItem(STORAGE,JSON.stringify(project));$('saveStatus').textContent='● 已保存到本机'; }
+  catch { $('saveStatus').textContent='保存不可用，请导出备份'; }
+}
+function change(next) {
+  try { const valid=validateProject(next); history.push(JSON.stringify(project));if(history.length>30)history.shift();project=valid;if(insertionTarget!=='root' && !findBlock(project.blocks,insertionTarget))insertionTarget='root';save();render();return true; }
+  catch(error){toast(error.message);return false;}
+}
+function findBlock(blocks,id) { for(const b of blocks){if(b.id===id)return b;const found=b.children && findBlock(b.children,id);if(found)return found;} }
+function addBlock(type,parent=insertionTarget) {
+  if(controller)return;
+  const added=block(type);
+  const blocks=parent==='root'?[...project.blocks,added]:editTree(project.blocks,parent,b=>({...b,children:[...b.children,added]}));
+  if(change({...project,blocks}))toast('已添加'+TYPES[type].label+'积木');
+}
+function renderPalette() {
+  $('palette').replaceChildren();$('categoryName').textContent=categories[category]+'积木';
+  document.querySelectorAll('[data-category]').forEach(btn=>btn.classList.toggle('active',btn.dataset.category===category));
+  for(const [type,d] of Object.entries(TYPES)) {
+    if(d.category!==category)continue;
+    const button=element('button',`palette-block ${category}`);button.draggable=!controller;button.disabled=!!controller;button.dataset.type=type;button.setAttribute('aria-label',`添加${d.label}积木`);
+    button.append(document.createTextNode(type==='turn'?'↻ '+d.label+' ':d.label+' '));
+    if('value' in d)button.append(element('span','sample-value',d.value));
+    if(type==='goto')button.append(element('span','sample-value','x: 0  y: 0'));
+    if(d.unit)button.append(document.createTextNode(d.unit));
+    button.addEventListener('click',()=>addBlock(type));
+    button.addEventListener('dragstart',e=>{e.dataTransfer.setData('application/x-block',JSON.stringify({type}));e.dataTransfer.effectAllowed='copy';});
+    $('palette').append(button);
+  }
+}
+function parameter(b,field,label) {
+  const d=TYPES[b.type];
+  const input=element('input');input.type=b.type==='say'?'text':'number';input.value=b[field];input.disabled=!!controller;input.setAttribute('aria-label',label);
+  if(input.type==='text')input.maxLength=80;else {input.min=field==='x'?-240:field==='y'?-180:d.min;input.max=field==='x'?240:field==='y'?180:d.max;input.step=b.type==='repeat'?'1':'any';}
+  let recorded=false;
+  const commit=()=>{
+    try {
+      const valid=validateProject({...project,blocks:editTree(project.blocks,b.id,item=>({...item,[field]:input.value}))});
+      if(JSON.stringify(valid)!==JSON.stringify(project)) {
+        if(!recorded){history.push(JSON.stringify(project));if(history.length>30)history.shift();recorded=true;}
+        project=valid;save();$('undoButton').disabled=false;
+      }
+      return true;
+    }catch{return false;}
+  };
+  input.addEventListener('input',()=>{if(input.value!=='' || input.type==='text')commit();});
+  input.addEventListener('blur',()=>{if(!commit())toast('请输入有效参数');input.value=findBlock(project.blocks,b.id)?.[field] ?? b[field];recorded=false;});
+  input.addEventListener('dragstart',e=>e.preventDefault());
+  return input;
+}
+function buildList(blocks,target) {
+  const list=element('div','block-list');list.dataset.target=target;
+  if(!blocks.length && target!=='root')list.append(element('div','empty-drop','＋ 拖入要重复的积木'));
+  blocks.forEach(b=>{
+    const d=TYPES[b.type];const wrapper=element('div',`code-block ${d.category}`);wrapper.dataset.id=b.id;
+    const row=element('div','block-row');row.draggable=!controller;row.append(element('span','grip','⠿'),document.createTextNode((b.type==='turn'?'↻ ':'')+d.label+' '));
+    if(b.type==='goto') {row.append(document.createTextNode('x'),parameter(b,'x','目标 X 坐标'),document.createTextNode('y'),parameter(b,'y','目标 Y 坐标'));}
+    else if('value' in d)row.append(parameter(b,'value',`${d.label}参数`));
+    if(d.unit)row.append(document.createTextNode(d.unit));
+    const actions=element('span','block-actions');
+    [['↑','上移',-1],['↓','下移',1],['×','删除',0]].forEach(([text,label,dir])=>{
+      const btn=element('button','',text);btn.disabled=!!controller;btn.setAttribute('aria-label',`${label}${d.label}积木`);btn.addEventListener('click',()=>change({...project,blocks:dir?moveInTree(project.blocks,b.id,dir):editTree(project.blocks,b.id,()=>[])}));actions.append(btn);
+    });
+    row.append(actions);wrapper.append(row);
+    row.addEventListener('dragstart',e=>{if(controller){e.preventDefault();return;}e.stopPropagation();e.dataTransfer.setData('application/x-block',JSON.stringify({id:b.id}));e.dataTransfer.effectAllowed='move';});
+    if(b.children) {const body=element('div','repeat-body');body.append(buildList(b.children,b.id));const add=element('button','add-here',insertionTarget===b.id?'✓ 积木将添加在这里':'＋ 向此循环添加积木');add.disabled=!!controller;add.addEventListener('click',()=>{insertionTarget=b.id;renderScript();toast('现在点击积木盒中的积木，就会加入此循环');});body.append(add);wrapper.append(body,element('div','repeat-end'));}
+    list.append(wrapper);
+  });
+  return list;
+}
+function renderScript() {
+  const next=buildList(project.blocks,'root');next.id='script';next.classList.add('root-list');const add=element('button','add-root',insertionTarget==='root'?'＋ 拖入积木，或点击积木盒添加':'＋ 改为向程序末尾添加');add.disabled=!!controller;add.addEventListener('click',()=>{insertionTarget='root';renderScript();toast('现在点击积木盒中的积木，将添加到程序末尾');});next.append(add);$('script').replaceWith(next);$('blockCount').textContent=`${countBlocks(project.blocks)} 块积木`;
+}
+function renderStage() {
+  $('stage').className='stage '+project.backdrop;$('stageBadge').textContent=backdrops[project.backdrop];
+  $('sprite').innerHTML=spriteArt[project.sprite];
+  // SVG art is a fixed trusted string; all project text uses textContent or value.
+  $('sprite').setAttribute('transform',`translate(${240+state.x} ${180-state.y}) rotate(${state.angle})`);
+  $('spriteThumbnail').innerHTML=`<svg viewBox="-45 -50 90 100" aria-hidden="true">${spriteArt[project.sprite]}</svg>`;
+  $('drawing').replaceChildren(...state.lines.map(line=>{const el=document.createElementNS(NS,'line');for(const key of ['x1','x2'])el.setAttribute(key,240+line[key]);for(const key of ['y1','y2'])el.setAttribute(key,180-line[key]);return el;}));
+  $('speech').hidden=!state.speech;$('speech').textContent=state.speech;
+  $('speech').style.left=`${Math.max(7,Math.min(67,(240+state.x)/480*100))}%`;
+  $('speech').style.top=`${Math.max(27,Math.min(88,(180-state.y)/360*100-14))}%`;
+  $('xValue').textContent=Math.round(state.x);$('yValue').textContent=Math.round(state.y);$('angleValue').textContent=Math.round(state.angle)+'°';$('spriteName').textContent=names[project.sprite];
+}
+function render() {
+  if(insertionTarget!=='root' && !findBlock(project.blocks,insertionTarget))insertionTarget='root';
+  $('projectName').value=project.name;$('spriteSelect').value=project.sprite;$('backdropSelect').value=project.backdrop;
+  document.body.classList.toggle('running',!!controller);
+  for(const id of ['runButton','newButton','clearButton','importButton','spriteSelect','backdropSelect','projectName'])$(id).disabled=!!controller;
+  document.querySelectorAll('[data-example]').forEach(btn=>btn.disabled=!!controller);
+  $('stopButton').disabled=!controller;$('undoButton').disabled=!!controller || !history.length;
+  renderPalette();renderScript();renderStage();
+}
+function cancel() { if(controller)controller.abort(); }
+async function run() {
+  if(controller)return;
+  if(!project.blocks.length){toast('先从积木盒添加一块积木吧');return;}
+  const current=new AbortController();controller=current;state=initialState();render();$('runStatus').textContent='正在执行你的创意…';$('stageMessage').textContent='看，积木让角色动起来了';
+  try {
+    state=await execute(project.blocks,{signal:current.signal,onStep:(next,id)=>{
+      state=next;renderStage();document.querySelectorAll('.executing').forEach(el=>el.classList.remove('executing'));document.querySelector(`[data-id="${CSS.escape(id)}"]`)?.classList.add('executing');
+    }});
+    $('runStatus').textContent='运行完成，做得不错！';$('stageMessage').textContent='又一个想法，变成了现实 ✦';
+  } catch(error) {
+    $('runStatus').textContent=error.name==='AbortError'?'已停止，可以继续编辑':'执行结束';$('stageMessage').textContent=error.name==='AbortError'?'准备好了，随时再试一次':error.message;
+    if(error.name!=='AbortError')toast(error.message);
+  } finally { if(controller===current){controller=null;render();} }
+}
+document.querySelectorAll('[data-category]').forEach(btn=>btn.addEventListener('click',()=>{category=btn.dataset.category;renderPalette();}));
+$('runButton').addEventListener('click',run);$('stopButton').addEventListener('click',cancel);
+$('resetButton').addEventListener('click',async()=>{cancel();state=initialState();renderStage();$('stageMessage').textContent='舞台已复位，开始新的尝试';});
+$('clearButton').addEventListener('click',()=>change({...project,blocks:[]}));
+$('newButton').addEventListener('click',()=>{insertionTarget='root';change({version:1,name:'我的新作品',sprite:'fox',backdrop:'meadow',blocks:[]});state=initialState();renderStage();toast('新作品准备好了，试着添加积木吧');});
+$('undoButton').addEventListener('click',()=>{if(controller || !history.length)return;project=validateProject(JSON.parse(history.pop()));save();render();toast('已撤销上一次编辑');});
+$('projectName').addEventListener('change',()=>change({...project,name:$('projectName').value.trim() || '我的新作品'}));
+for(const [id,key] of [['spriteSelect','sprite'],['backdropSelect','backdrop']])$(id).addEventListener('change',()=>change({...project,[key]:$(id).value}));
+document.querySelectorAll('[data-example]').forEach(btn=>btn.addEventListener('click',()=>{change(example(btn.dataset.example));state=initialState();renderStage();$('runStatus').textContent='示例已就绪，点击绿旗运行';toast('已载入示例，可撤销恢复之前的作品');}));
+$('exportButton').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(project,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=element('a');a.href=url;a.download=(project.name.replace(/[<>:"/\\|?*]/g,'_') || '作品')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('作品已导出，记得保留这份小灵感');});
+$('importButton').addEventListener('click',()=>$('fileInput').click());
+$('fileInput').addEventListener('change',async()=>{
+  const file=$('fileInput').files[0];if(!file)return;
+  try {if(file.size>200000)throw new Error('文件太大，请选择 200 KB 以内的作品');const imported=validateProject(JSON.parse(await file.text()));if(controller)throw new Error('请先停止执行再导入');if(change(imported)){state=initialState();renderStage();toast('已导入作品，点击绿旗试试看');}}
+  catch(error){toast(error instanceof SyntaxError?'文件不是有效的 JSON，原作品已保留':error.message);}
+  finally{$('fileInput').value='';}
+});
+$('helpButton').addEventListener('click',()=>$('helpDialog').showModal());for(const id of ['closeHelp','startCreating'])$(id).addEventListener('click',()=>$('helpDialog').close());
+document.addEventListener('keydown',e=>{if(e.key==='Escape' && controller)cancel();});
+document.addEventListener('dragover',e=>{
+  const list=e.target.closest('.block-list');if(!list || controller || !Array.from(e.dataTransfer.types).includes('application/x-block'))return;
+  e.preventDefault();document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));list.classList.add('drag-over');
+});
+document.addEventListener('dragend',()=>document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')));
+document.addEventListener('drop',e=>{
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  const list=e.target.closest('.block-list');if(!list || controller)return;e.preventDefault();
+  try {
+    const data=JSON.parse(e.dataTransfer.getData('application/x-block'));const parent=list.dataset.target;
+    const moving=data.id?findBlock(project.blocks,data.id):block(data.type);
+    if(!moving)return;
+    if(parent===moving.id || (moving.children && findBlock(moving.children,parent))){toast('不能把循环放进自己里面');return;}
+    const targetRow=e.target.closest('.block-row');const before=targetRow?.parentElement.parentElement===list?targetRow.parentElement.dataset.id:null;
+    if(before===moving.id)return;
+    let blocks=data.id?editTree(project.blocks,data.id,()=>[]):project.blocks;
+    const insert=items=>{const next=[...items];const i=next.findIndex(b=>b.id===before);next.splice(i<0?next.length:i,0,moving);return next;};
+    blocks=parent==='root'?insert(blocks):editTree(blocks,parent,b=>({...b,children:insert(b.children)}));change({...project,blocks});
+  }catch(error){toast(error.message || '无法添加这块积木');}
+});
+render();if(bootMessage)toast(bootMessage);else save();
+
+</script>
+</body>
+</html>
