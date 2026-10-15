@@ -6,7 +6,7 @@ export function fieldsFor(b,project){
   if(b.type==='define'&&b.parameters)return {name:TYPES.define.fields.name};
   if(b.type!=='call'||!b.arguments)return TYPES[b.type].fields;
   const def=project.blocks.find(x=>x.type==='define'&&x.name===b.name),fields={name:TYPES.call.fields.name};
-  for(const p of signature(def))fields['arg:'+p.id]={kind:'value',label:p.name,default:parameterDefault(p.type),expression:true,valueType:p.type};return fields;
+  for(const p of def?signature(def):[])fields['arg:'+p.id]={kind:'value',label:p.name,default:parameterDefault(p.type),expression:true,valueType:p.type};return fields;
 }
 export const readField=(b,key)=>key.startsWith('arg:')?b.arguments?.find(a=>a.parameterId===key.slice(4))?.value:b[key];
 export function writeField(b,key,value){if(!key.startsWith('arg:'))return {...b,[key]:value};const id=key.slice(4);return {...b,arguments:[...(b.arguments||[]).filter(a=>a.parameterId!==id),{parameterId:id,value}]};}
