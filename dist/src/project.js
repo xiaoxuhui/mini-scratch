@@ -1,5 +1,6 @@
 import {TYPES,block,uid,isExpression,expression} from './blocks.js';
 import {validateAssets,PROJECT_BUDGET} from './assets.js';
+import {validateLists} from './lists.js';
 const named=value=>{if(typeof value!=='string'||!value.trim()||value.trim().length>20||/[\u0000-\u001f]/.test(value))throw new Error('名称需要 1–20 个字符');return value.trim();};
 export function primitive(value){if(typeof value==='string')return value.slice(0,80);if(typeof value==='boolean')return value;if(typeof value==='number'&&Number.isFinite(value))return value;throw new Error('参数必须是文字、有限数值或返回值积木');}
 export function validateProject(raw){
@@ -52,13 +53,14 @@ export function validateProject(raw){
     result.variables=raw.variables.map(item=>({name:named(item?.name),value:primitive(item?.value)}));
     if(new Set(result.variables.map(x=>x.name)).size!==result.variables.length)throw new Error('变量名称不能重复');
   }
+  if(raw.lists!==undefined)result.lists=validateLists(raw.lists);
   return result;
 }
 export function editTree(blocks,id,action){return blocks.flatMap((b,i)=>b.id===id?(action(b,i)??[]):({...b,...(b.children?{children:editTree(b.children,id,action)}:{}),...(b.otherwise?{otherwise:editTree(b.otherwise,id,action)}:{})}));}
 export function moveInTree(blocks,id,direction){const out=[...blocks],i=out.findIndex(b=>b.id===id);if(i>=0){const j=i+direction;if(j>=0&&j<out.length)[out[i],out[j]]=[out[j],out[i]];return out;}return out.map(b=>({...b,...(b.children?{children:moveInTree(b.children,id,direction)}:{}),...(b.otherwise?{otherwise:moveInTree(b.otherwise,id,direction)}:{})}));}
 export function findBlock(blocks,id){for(const b of blocks){if(b.id===id)return b;const found=findBlock(b.children||[],id)||findBlock(b.otherwise||[],id);if(found)return found;}}
 export function countBlocks(blocks){return blocks.reduce((n,b)=>n+1+countBlocks(b.children||[])+countBlocks(b.otherwise||[]),0);}
-export function isLegacyProject(project){const old=new Set(['move','turn','goto','say','wait','repeat','penDown','penUp','clear']);return !project.variables?.length && (function legacy(items){return items.every(b=>old.has(b.type)&&Object.values(b).every(v=>!isExpression(v))&&(!b.children||legacy(b.children)));})(project.blocks);}
+export function isLegacyProject(project){const old=new Set(['move','turn','goto','say','wait','repeat','penDown','penUp','clear']);return !project.variables?.length&&!project.lists?.length && (function legacy(items){return items.every(b=>old.has(b.type)&&Object.values(b).every(v=>!isExpression(v))&&(!b.children||legacy(b.children)));})(project.blocks);}
 export function example(key='square'){
   const square=[block('say',{value:'一起画一个正方形吧！'}),block('penDown'),block('repeat',{value:4,children:[block('move',{value:100}),block('turn',{value:90})]}),block('penUp'),block('say',{value:'完成啦！你也来试试 ✨'})];
   const flower=[block('penDown'),block('repeat',{value:12,children:[block('repeat',{value:4,children:[block('move',{value:70}),block('turn',{value:90})]}),block('turn',{value:30})]}),block('penUp'),block('say',{value:'送你一朵几何花！'})];

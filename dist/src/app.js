@@ -7,6 +7,7 @@ import {createAssetEditor} from './asset-editor.js';
 import {migrateProcedures} from './procedures.js';
 import {PROJECT_BUDGET} from './assets.js';
 import {migrateEventScripts,matchesEvent} from './events.js';
+import {createListUI} from './list-ui.js';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={fox:'小狐狸',rabbit:'小兔子',robot:'小机器人'},backdrops={meadow:'青草地',space:'星空',paper:'方格纸'};
 const history=[],audio=createAudio(()=>{if(state)renderStage();}),senses={mouseX:0,mouseY:0,mouseDown:false,keys:new Set()};
@@ -18,14 +19,16 @@ function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;
 function save(){try{saveProject(localStorage,project);$('saveStatus').textContent='● 已保存到本机';}catch{$('saveStatus').textContent='保存失败，请导出备份';}}
 function change(next,{render:shouldRender=true,record=true,quiet=false}={}){
   if(controller)return false;
-  try{const valid=validateProject(migrateEventScripts(migrateProcedures(validateProject(next))));if(JSON.stringify(valid)===JSON.stringify(project))return true;if(record){history.push(JSON.stringify(project));if(history.length>30)history.shift();}if(valid.sprite!==project.sprite)state.costume=valid.sprite;if(valid.backdrop!==project.backdrop)state.backdrop=valid.backdrop;if(JSON.stringify(valid.variables)!==JSON.stringify(project.variables))state.variables=new Map((valid.variables||[]).map(v=>[v.name,v.value]));project=valid;save();if(shouldRender)render();else $('undoButton').disabled=!history.length;return true;}
+  try{const valid=validateProject(migrateEventScripts(migrateProcedures(validateProject(next))));if(JSON.stringify(valid)===JSON.stringify(project))return true;if(record){history.push(JSON.stringify(project));if(history.length>30)history.shift();}if(valid.sprite!==project.sprite)state.costume=valid.sprite;if(valid.backdrop!==project.backdrop)state.backdrop=valid.backdrop;if(JSON.stringify(valid.variables)!==JSON.stringify(project.variables))state.variables=new Map((valid.variables||[]).map(v=>[v.name,v.value]));if(JSON.stringify(valid.lists)!==JSON.stringify(project.lists))state.lists=initialState(valid).lists;project=valid;save();if(shouldRender)render();else $('undoButton').disabled=!history.length;return true;}
   catch(error){if(!quiet)toast(error.message);return false;}
 }
 const assets=createAssetEditor({getProject:()=>project,isRunning:()=>!!controller,onChange:change,notice:toast,audio});
-const editor=createEditor({getProject:()=>project,isRunning:()=>!!controller,onChange:change,notice:toast,getState:()=>state,getSensing:()=>senses,onAssets:kind=>assets.open(kind)});
+const listUI=createListUI({getProject:()=>project,isRunning:()=>!!controller,onChange:change,notice:toast});
+const editor=createEditor({getProject:()=>project,isRunning:()=>!!controller,onChange:change,notice:toast,getState:()=>state,getSensing:()=>senses,onAssets:kind=>assets.open(kind),renderListTools:listUI.renderTools});
 function renderMonitor(){
   const values=state.variables;
   $('variableMonitor').replaceChildren();for(const [name,value] of values){const row=element('div','variable-watch');row.append(element('span','',name),element('strong','',String(value)));$('variableMonitor').append(row);}
+  listUI.renderMonitor($('listMonitor'),state.lists);
 }
 function renderStage(){
   const backdrop=state.backdrop||project.backdrop,costume=state.costume||project.sprite;

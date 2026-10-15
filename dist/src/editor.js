@@ -5,14 +5,15 @@ function el(tag,className,text){const node=document.createElement(tag);if(classN
 const option=(value,label)=>{const node=el('option','',label);node.value=value;return node;};
 const keyNames={space:'空格',ArrowLeft:'← 左',ArrowRight:'右 →',ArrowUp:'↑ 上',ArrowDown:'↓ 下',meadow:'青草地',spaceBackdrop:'星空',paper:'方格纸'};
 function labelOption(value,field){return field.label==='背景'&&value==='space'?'星空':keyNames[value]||value;}
-export function createEditor({getProject,isRunning,onChange,notice,getState,getSensing,onAssets}){
+export function createEditor({getProject,isRunning,onChange,notice,getState,getSensing,onAssets,renderListTools}){
   let category='events',target={id:'root',branch:'children'},activeSlot=null;
   const fieldLabel=(b,key)=>`${TYPES[b.type].label} · ${fieldsFor(b,getProject())[key].label}`;
-  const defaults=type=>{const b=block(type),project=getProject();for(const [key,f] of Object.entries(TYPES[type].fields)){if(f.kind==='variable')b[key]=project.variables?.[0]?.name||'分数';if(f.kind==='procedure')b[key]=project.blocks.find(x=>x.type==='define')?.name||'小舞步';if(f.kind==='sound')b[key]=project.assets?.sounds[0]?.id||'';}if(type==='define'){b.parameters=[];delete b.parameter;}if(type==='call'){const def=project.blocks.find(x=>x.type==='define'&&x.name===b.name);b.arguments=(def?signature(def):[]).map(p=>({parameterId:p.id,value:parameterDefault(p.type)}));delete b.value;}return b;};
+  const defaults=type=>{const b=block(type),project=getProject();for(const [key,f] of Object.entries(TYPES[type].fields)){if(f.kind==='variable')b[key]=project.variables?.[0]?.name||'分数';if(f.kind==='list')b[key]=project.lists?.[0]?.name||'清单';if(f.kind==='procedure')b[key]=project.blocks.find(x=>x.type==='define')?.name||'小舞步';if(f.kind==='sound')b[key]=project.assets?.sounds[0]?.id||'';}if(type==='define'){b.parameters=[];delete b.parameter;}if(type==='call'){const def=project.blocks.find(x=>x.type==='define'&&x.name===b.name);b.arguments=(def?signature(def):[]).map(p=>({parameterId:p.id,value:parameterDefault(p.type)}));delete b.value;}return b;};
+  const reporter=type=>{const {id,...value}=defaults(type);return value;};
   function changedField(id,key,value,options={}){const p=getProject(),old=findBlock(p.blocks,id);let next=writeField(old,key,value);if(old.type==='call'&&key==='name'&&old.arguments){const def=p.blocks.find(x=>x.type==='define'&&x.name===value);next.arguments=(def?signature(def):[]).map(p=>({parameterId:p.id,value:parameterDefault(p.type)}));options={...options,render:true};}let blocks=editTree(p.blocks,id,()=>next);if(old.type==='define'&&key==='name'){const rename=items=>items.map(b=>({...b,...(b.type==='call'&&b.name===old.name?{name:value}:{}),...(b.children?{children:rename(b.children)}:{}),...(b.otherwise?{otherwise:rename(b.otherwise)}:{})}));blocks=rename(blocks);}return onChange({...p,blocks},options);}
   function add(type){
     if(isRunning())return;
-    const d=TYPES[type];if(d.reporter){openExpression(null,null,expression(type,{...(type==='variable'?{name:getProject().variables?.[0]?.name||'分数'}:{})}));return;}
+    const d=TYPES[type];if(type.startsWith('list')&&!getProject().lists?.length){notice('先在变量分类点击“新建列表”');return;}if(d.reporter){openExpression(null,null,reporter(type));return;}
     let p=getProject();const added=defaults(type);
     if(type==='define'){const used=new Set(p.blocks.filter(b=>b.type==='define').map(b=>b.name));let i=2;while(used.has(added.name))added.name='小舞步'+i++;}
     if((type==='setVar'||type==='changeVar')&&!p.variables?.length)p={...p,variables:[{name:'分数',value:0}]};
@@ -20,7 +21,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     const blocks=dest.id==='root'?[...p.blocks,added]:editTree(p.blocks,dest.id,b=>({...b,[dest.branch]:[...b[dest.branch],added]}));
     if(onChange({...p,blocks})){if(d.event){target={id:added.id,branch:'children'};renderScript();}notice('已添加'+d.label+'积木'+(d.event?'，接下来添加的动作放在这个事件里':''));}
   }
-  function choices(field,value){const p=getProject();let entries=field.options||[];if(field.kind==='variable')entries=(p.variables||[]).map(v=>v.name);if(field.kind==='procedure')entries=p.blocks.filter(b=>b.type==='define').map(b=>b.name);if(field.kind==='sound')entries=(p.assets?.sounds||[]).map(x=>x.id);if(field.label==='背景')entries=[...entries,...(p.assets?.backdrops||[]).map(x=>x.id)];if(!entries.includes(value))entries=[value,...entries];return entries;}
+  function choices(field,value){const p=getProject();let entries=field.options||[];if(field.kind==='variable')entries=(p.variables||[]).map(v=>v.name);if(field.kind==='list')entries=(p.lists||[]).map(l=>l.name);if(field.kind==='procedure')entries=p.blocks.filter(b=>b.type==='define').map(b=>b.name);if(field.kind==='sound')entries=(p.assets?.sounds||[]).map(x=>x.id);if(field.label==='背景')entries=[...entries,...(p.assets?.backdrops||[]).map(x=>x.id)];if(!entries.includes(value))entries=[value,...entries];return entries;}
   function choiceLabel(value,spec){return (getProject().assets?.sounds||[]).concat(getProject().assets?.backdrops||[]).find(x=>x.id===value)?.name||(spec.kind==='sound'&&value===''?'请先录入声音':labelOption(value,spec));}
   function fieldControl(b,key,spec){
     const value=readField(b,key),boolean=spec.valueType==='boolean'||isBoolean(value,getProject()),slot=el('span','parameter-slot'+(boolean?' boolean-slot':''));slot.dataset.id=b.id;slot.dataset.field=key;
@@ -28,7 +29,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     if(isExpression(value)){
       input=el('button',`expression-chip ${TYPES[value.type].category}${isBoolean(value,getProject())?' boolean-value':''}`,valueLabel(value,getProject()));input.type='button';input.setAttribute('aria-label','编辑'+fieldLabel(b,key)+'返回值');input.addEventListener('click',()=>openExpression(b.id,key));
     }else if(boolean){input=el('select');input.append(option('true','真'),option('false','假'));input.value=String(truth(value));input.addEventListener('change',()=>changedField(b.id,key,input.value==='true'));
-    }else if(['choice','variable','procedure','sound'].includes(spec.kind)){
+    }else if(['choice','variable','procedure','sound','list'].includes(spec.kind)){
       input=el('select');for(const item of choices(spec,value))input.append(option(item,choiceLabel(item,spec)));input.value=value;input.addEventListener('change',()=>changedField(b.id,key,input.value));
     }else{
       input=el('input');input.type=spec.kind==='number'?'number':'text';input.value=value;input.maxLength=spec.kind==='name'?20:80;
@@ -82,11 +83,12 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     const addRoot=el('button','add-root',target.id==='root'?'＋ 在外层添加事件或游离积木':'＋ 改为在外层添加独立脚本');addRoot.id='addRootButton';addRoot.disabled=isRunning();addRoot.addEventListener('click',()=>{target={id:'root',branch:'children'};renderScript();notice('接下来添加到外层；动作需要连接事件才会执行');});next.append(addRoot);$('script').replaceWith(next);$('blockCount').textContent=`${countBlocks(p.blocks)} 块积木 · ${p.blocks.filter(b=>TYPES[b.type].event).length} 个事件`;
   }
   function renderTools(){
-    const tools=$('categoryTools');tools.replaceChildren();const p=getProject();
+    const tools=$('categoryTools');tools.replaceChildren();tools.classList.remove('list-tools');const p=getProject();
     if(category==='variables'){
       const name=el('input');name.placeholder='变量名';name.maxLength=20;name.setAttribute('aria-label','新变量名称');
       const addVar=el('button','button primary','＋ 新建变量');addVar.disabled=isRunning();addVar.addEventListener('click',()=>onChange({...getProject(),variables:[...(getProject().variables||[]),{name:name.value.trim()||'分数',value:0}]}));tools.append(name,addVar);
       for(const variable of p.variables||[]){const row=el('div','variable-declaration');row.append(el('span','',variable.name));const value=el('input');value.value=variable.value;value.setAttribute('aria-label',variable.name+'初始值');value.disabled=isRunning();value.addEventListener('change',()=>{const n=Number(value.value),initial=value.value.trim()!==''&&Number.isFinite(n)?n:value.value;onChange({...getProject(),variables:getProject().variables.map(v=>v.name===variable.name?{...v,value:initial}:v)});});const remove=el('button','text-button','×');remove.disabled=isRunning();remove.setAttribute('aria-label','删除变量'+variable.name);remove.addEventListener('click',()=>onChange({...getProject(),variables:getProject().variables.filter(v=>v.name!==variable.name)}));row.append(value,remove);tools.append(row);}
+      renderListTools(tools);
     }
     if(category==='custom'){tools.append(el('p','tool-note','定义内添加数字、文字或布尔参数，直接拖动参数名使用。'));}
     if(category==='sound'){const record=el('button','button primary','● 录入 / 管理声音');record.disabled=isRunning();record.addEventListener('click',()=>onAssets('sounds'));tools.append(record);}
@@ -96,7 +98,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
     $('palette').replaceChildren();$('categoryName').textContent=CATEGORIES[category]+'积木';document.querySelectorAll('[data-category]').forEach(btn=>btn.classList.toggle('active',btn.dataset.category===category));renderTools();
     for(const [type,d] of Object.entries(TYPES)){
       if(d.category!==category||d.hidden||type==='argument')continue;const controlFrame=category==='control'&&d.container,btn=el('button',`palette-block ${category}${controlFrame?' control-frame':''}${d.reporter?' reporter':''}${d.valueType==='boolean'?' boolean-value':''}`);btn.draggable=!isRunning();btn.disabled=isRunning();btn.dataset.type=type;btn.setAttribute('aria-label',`添加${d.label}${d.reporter?'返回值':'积木'}`);const head=controlFrame?el('span','palette-head'):btn;head.append(document.createTextNode(d.label+' '));
-      const paletteFields=type==='define'?{name:d.fields.name}:type==='call'?fieldsFor(defaults(type),getProject()):d.fields;for(const [key,spec] of Object.entries(paletteFields)){const sample=key.startsWith('arg:')?spec.label:isExpression(spec.default)?TYPES[spec.default.type].label:labelOption(spec.default,spec);head.append(el('span','sample-value'+(spec.valueType==='boolean'||isBoolean(spec.default,getProject())?' boolean-value':''),String(sample)));}
+      const paletteFields=type==='define'?{name:d.fields.name}:type==='call'?fieldsFor(defaults(type),getProject()):d.fields;for(const [key,spec] of Object.entries(paletteFields)){const sample=key.startsWith('arg:')?spec.label:spec.kind==='list'?(getProject().lists?.[0]?.name||spec.default):isExpression(spec.default)?TYPES[spec.default.type].label:labelOption(spec.default,spec);head.append(el('span','sample-value'+(spec.valueType==='boolean'||isBoolean(spec.default,getProject())?' boolean-value':''),String(sample)));}
       if(controlFrame){btn.append(head,el('span','palette-cavity'));if(d.otherwise)btn.append(el('span','palette-else','否则'),el('span','palette-cavity'));btn.append(el('span','control-end'));}
       btn.addEventListener('click',()=>add(type));btn.addEventListener('dragstart',e=>{e.dataTransfer.setData('application/x-block',JSON.stringify({type}));e.dataTransfer.effectAllowed='copy';});$('palette').append(btn);
     }
@@ -113,7 +115,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
       const wrapper=el('div','expression-node'),type=el('select');type.setAttribute('aria-label',depth===0?'返回值类型':`第${depth}层返回值类型`);type.append(option('literal','直接输入值'));
       const def=getProject().blocks.find(b=>b.id===choose().definitionId),parameters=new Map((def?.parameters||[]).map(p=>['param:'+p.id,expression('parameter',{definitionId:def.id,parameterId:p.id})]));
       if(depth<8)for(const [categoryId,name] of Object.entries(CATEGORIES)){const group=el('optgroup');group.label=name;for(const [key,d] of Object.entries(TYPES))if(d.category===categoryId&&d.reporter&&!d.hidden&&key!=='argument')group.append(option(key,d.label));if(categoryId==='custom')for(const [key,v] of parameters)group.append(option(key,valueLabel(v,getProject())));if(group.children.length)type.append(group);}
-      type.value=isExpression(value)?value.type==='parameter'?'param:'+value.parameterId:value.type:'literal';type.addEventListener('change',()=>{setValue(type.value==='literal'?0:parameters.get(type.value)||expression(type.value,type.value==='variable'?{name:getProject().variables?.[0]?.name||'分数'}:{}));draw();});wrapper.append(type);
+      type.value=isExpression(value)?value.type==='parameter'?'param:'+value.parameterId:value.type:'literal';type.addEventListener('change',()=>{setValue(type.value==='literal'?0:parameters.get(type.value)||reporter(type.value));draw();});wrapper.append(type);
       if(!isExpression(value)){
         const kind=el('select');kind.setAttribute('aria-label','输入值类型');kind.append(option('number','数值'),option('string','文字'),option('boolean','布尔'));kind.value=typeof value;
         const input=typeof value==='boolean'?el('select'):el('input');input.setAttribute('aria-label','直接输入值');if(typeof value==='boolean')input.append(option('true','真'),option('false','假'));input.value=String(value);input.maxLength=80;const update=()=>{setValue(kind.value==='number'?Number(input.value):kind.value==='boolean'?input.value==='true':input.value);preview();};input.addEventListener('input',update);kind.addEventListener('change',()=>{setValue(parameterDefault(kind.value));draw();});wrapper.append(kind,input);if(typeof value==='boolean')wrapper.append(el('span','boolean-example boolean-value','真 / 假'));
@@ -135,7 +137,7 @@ export function createEditor({getProject,isRunning,onChange,notice,getState,getS
   document.addEventListener('drop',e=>{
     document.querySelectorAll('.drag-over').forEach(n=>n.classList.remove('drag-over'));if(isRunning())return;
     try{const raw=e.dataTransfer.getData('application/x-block');if(!raw)return;const data=JSON.parse(raw),d=data.type&&TYPES[data.type],slot=e.target.closest('.accepts-expression');
-      if(d?.reporter||data.expression){e.preventDefault();if(!slot){notice('返回值积木要放进白色参数中');return;}const value=data.expression||expression(data.type,data.type==='variable'?{name:getProject().variables?.[0]?.name||'分数'}:{});if(value.type==='parameter'&&!listSlots().some(s=>s.id===slot.dataset.id&&s.field===slot.dataset.field&&s.definitionId===value.definitionId)){notice('参数只能放在所属定义内部');return;}changedField(slot.dataset.id,slot.dataset.field,value);return;}
+      if(d?.reporter||data.expression){e.preventDefault();if(!slot){notice('返回值积木要放进白色参数中');return;}const value=data.expression||reporter(data.type);if(value.type==='parameter'&&!listSlots().some(s=>s.id===slot.dataset.id&&s.field===slot.dataset.field&&s.definitionId===value.definitionId)){notice('参数只能放在所属定义内部');return;}changedField(slot.dataset.id,slot.dataset.field,value);return;}
       const list=e.target.closest('.block-list');if(!list)return;e.preventDefault();const p=getProject(),moving=data.id?findBlock(p.blocks,data.id):defaults(data.type);if(!moving)return;
       const parent=list.dataset.target,branch=list.dataset.branch;if(parent===moving.id||findBlock(moving.children||[],parent)||findBlock(moving.otherwise||[],parent)){notice('不能放进自己的分支');return;}
       const row=e.target.closest('.block-row'),before=row?.parentElement.parentElement===list?row.parentElement.dataset.id:null;if(before===moving.id)return;

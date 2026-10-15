@@ -1,4 +1,5 @@
 import {TYPES,isExpression} from './blocks.js';
+import {getList,listIndex} from './lists.js';
 export const numeric=value=>{const n=Number(value);if(!Number.isFinite(n))throw new Error('运算需要有限数值');return n;};
 export const truth=value=>!(value===false||value===0||value===''||value==='0'||String(value).toLowerCase()==='false');
 export function evaluate(value,context={},depth=0){
@@ -18,6 +19,8 @@ export function evaluate(value,context={},depth=0){
     case 'keyPressed':return sense.keys?.has(value.key) || false;
     case 'timer':return Math.max(0,(context.clock?.()||0)-(state.timerStart||0));
     case 'variable':if(!variables.has(value.name))throw new Error('变量不存在：'+value.name);return variables.get(value.name);
+    case 'listLength':return getList(state,value.name).length;
+    case 'listItem':{const items=getList(state,value.name);return items[listIndex(e(value.index),items.length)];}
     case 'argument':if(!context.inCall)throw new Error('参数积木只能在自制积木调用中使用');return context.argument;
     case 'parameter':if(!context.inCall||context.definitionId!==value.definitionId||!context.parameters?.has(value.parameterId))throw new Error('参数只能在所属自制积木内使用');return context.parameters.get(value.parameterId);
     case 'add':result=n(value.a)+n(value.b);break;case 'subtract':result=n(value.a)-n(value.b);break;case 'multiply':result=n(value.a)*n(value.b);break;
