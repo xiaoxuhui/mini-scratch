@@ -47,4 +47,4 @@ node scripts/serve.mjs
 
 [v0.2.1形状验收](doc/v0.2.1-测试报告.md)
 
-![右开控制积木](doc/evidence/v0.2.1-desktop.png)
+![具名参数、六边形条件和自定义素材](doc/evidence/v0.3-desktop.png)

@@ -1,5 +1,11 @@
 # GitHub 与大厅接入报告
 
+## v0.3 素材、具名参数与数值取值已上线
+
+2026-10-16。固定来源e98545924338d66d716b44f3c1f75bf3f32f5556，56/56测试、构建与[来源CI](https://github.com/xiaoxuhui/mini-scratch/actions/runs/38778272520)成功。自定义图像、绘图、录音/声音导入、多个具名参数与六边形真假值已接入，状态数值可直接参与运算。浏览器验证及未验范围见[v0.3报告](v0.3-测试报告.md)。
+
+大厅资源#5/版本0.3.0，签名序列12已发布并匿名核验全部12代目录/13累计资源。大厅点“立即检查”后更新灵感积木，重新打开激活；本地play.html刷新即可。当前大厅APK0.4.2未开放麦克风，声音可导入系统录音；未做Android真机及真人录音验收。详见[大厅N19记录](https://github.com/xiaoxuhui/game-hub/blob/main/doc/evidence/n19-media-parameters-release.md)。
+
 ## v0.2.1 右开控制积木已上线
 
 2026-10-16，来源3b073c131fba1861be9214b8eefefffa4560ab96已推送；控制容器与预览改为右开横向U形，桌面和手机验收、42/42与构建核对通过。大厅资源#4/版本0.2.1，签名目录序列11已上线，保留手柄图标和现有存档。匿名结果：Verified online sequence 11, 12 cumulative resources across 11 signed catalogs。两仓库CI均成功，详见[大厅N18记录](https://github.com/xiaoxuhui/game-hub/blob/main/doc/evidence/n18-control-release.md)。大厅检查并更新后打开激活；本地单文件刷新即可。
